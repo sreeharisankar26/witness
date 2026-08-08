@@ -133,7 +133,7 @@ function summary() {
   };
 }
 
-createServer(async (req, res) => {
+const server = createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return json(res, 204, {});
   const url = new URL(req.url, `http://x`);
 
@@ -169,7 +169,26 @@ createServer(async (req, res) => {
   } catch (e) {
     json(res, 400, { error: String(e?.message ?? e) });
   }
-}).listen(PORT, () => {
+});
+
+/**
+ * A second instance is not an error worth a stack trace.
+ *
+ * The panel can be restarted while an earlier sync server is still alive, and
+ * "address already in use" then looked like a crash. If something is already
+ * serving on this port, the job is done — say so and exit cleanly.
+ */
+server.on('error', err => {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`A Witness sync server is already running on port ${PORT}.`);
+    console.log('Nothing to do — this one is exiting. Use it, or press "Free it anyway" in the panel to restart.');
+    process.exit(0);
+  }
+  console.error(`Could not start the sync server: ${err.message}`);
+  process.exit(1);
+});
+
+server.listen(PORT, () => {
   console.log(`Witness sync server on http://localhost:${PORT}`);
   console.log(`  GET  /summary   dashboard feed`);
   console.log(`  POST /ncr       confirmed nonconformance`);

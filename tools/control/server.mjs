@@ -467,7 +467,15 @@ const ACTIONS = {
     raw: 'npx --yes expo install babel-preset-expo && npm install',
   }),
   doctor: () => launch('doctor', 'npx', ['expo', 'install', '--fix'], { cwd: APP }),
-  server: () => launch('server', process.execPath, [join(ROOT, 'server', 'index.mjs')]),
+  // If one is already serving, launching another just exits — say so instead.
+  server: async () => {
+    if (await probe('http://localhost:8787/health')) {
+      say('server', '— a sync server is already running on 8787; using it —', 'cmd');
+      entry('server').status = 'done';
+      return { ok: true, alreadyRunning: true };
+    }
+    return launch('server', process.execPath, [join(ROOT, 'server', 'index.mjs')]);
+  },
   expo: async () => {
     const port = await pickMetroPort();
     const r = launch('expo', 'npx', ['expo', 'start', '--port', String(port)], { cwd: APP });
