@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Witness",
+    "slug": "witness",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B0D10",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "in.espada.witness",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "VIBRATE",
+        "ACCESS_NETWORK_STATE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0D10"
+      }
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Witness uses the camera to read the asset tag on a part. Nothing is recorded or uploaded."
+        }
+      ]
+    ],
+    "extra": {
+      "note": "Android only by design. iOS provisioning is a demo-day risk we chose not to take.",
+      "devClient": "Runs in Expo Go as configured. For a standalone APK later: npx expo install expo-dev-client, then add \"expo-dev-client\" back to the plugins array above. Keep the package and the plugin list in sync - listing a plugin without installing it is a hard startup error.",
+      "eas": {
+        "projectId": "19797bd0-58ac-4936-a21e-5cae15f650e0"
+      }
+    },
+    "owner": "sreeharisankar26"
+  }
+}

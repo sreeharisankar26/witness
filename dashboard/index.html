@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Witness — Site View</title>
+<!--
+  Supervisor view. Single file, no build step, no dependencies.
+  Point SERVER at the sync server and open it. Polls every 3s so the
+  screen visibly updates the moment a phone's queue drains - that is the
+  shot that proves this is a system and not a gadget.
+-->
+<style>
+  :root{
+    --bg:#0B0D10; --card:#14181D; --line:#252B33; --text:#F2F5F8; --dim:#8B95A1;
+    --ok:#12B76A; --stop:#E5484D; --warn:#F5A524; --accent:#4C8DFF;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:26px 32px 18px;border-bottom:1px solid var(--line);
+         display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px}
+  h1{margin:0;font-size:26px;font-weight:800;letter-spacing:4px}
+  .sub{color:var(--dim);font-size:13px;margin-top:4px}
+  .live{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:12px;letter-spacing:1px}
+  .pulse{width:9px;height:9px;border-radius:50%;background:var(--ok);animation:p 1.8s infinite}
+  @keyframes p{0%,100%{opacity:1}50%{opacity:.25}}
+  main{padding:24px 32px;display:grid;gap:22px;max-width:1240px}
+  .row{display:grid;gap:16px}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+  .zones{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .two{grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .label{color:var(--dim);font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase}
+  .big{font-size:38px;font-weight:900;margin-top:8px;line-height:1}
+  .zone-name{font-weight:700;font-size:15px}
+  .bar{height:9px;background:#000;border-radius:99px;overflow:hidden;margin:12px 0 8px}
+  .bar > i{display:block;height:100%;background:var(--ok);transition:width .6s ease}
+  .pill{display:inline-block;padding:3px 9px;border-radius:99px;font-size:10px;
+        font-weight:900;letter-spacing:1px}
+  .HIGH{background:#3A0D0F;color:var(--stop)}
+  .ELEVATED{background:#3A2606;color:var(--warn)}
+  .WATCH{background:#1B2333;color:var(--accent)}
+  .OK{background:#06301E;color:var(--ok)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--dim);font-size:10px;letter-spacing:1.3px;
+     text-transform:uppercase;padding:0 0 10px;font-weight:800}
+  td{padding:10px 0;border-top:1px solid var(--line);vertical-align:top}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--dim)}
+  .feed div{padding:9px 0;border-top:1px solid var(--line);display:flex;gap:10px;font-size:13px}
+  .feed div:first-child{border-top:0}
+  .tag{font-size:9px;font-weight:900;letter-spacing:1px;padding:3px 7px;border-radius:5px;height:fit-content}
+  .NCR{background:#3A0D0F;color:var(--stop)}
+  .VERIFIED{background:#06301E;color:var(--ok)}
+  footer{padding:18px 32px 40px;color:var(--dim);font-size:11.5px;max-width:1240px;line-height:1.7}
+  .err{background:#3A0D0F;color:var(--stop);padding:10px 14px;border-radius:8px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>WITNESS</h1>
+    <div class="sub" id="proj">connecting…</div>
+  </div>
+  <div class="live"><span class="pulse"></span><span id="upd">LIVE</span></div>
+</header>
+
+<main>
+  <div id="err"></div>
+
+  <div class="row kpis">
+    <div class="card"><div class="label">Field-verified</div><div class="big" id="k-pct" style="color:var(--ok)">—</div><div class="sub" id="k-pct-sub"></div></div>
+    <div class="card"><div class="label">Open NCRs</div><div class="big" id="k-ncr" style="color:var(--stop)">—</div><div class="sub" id="k-ncr-sub"></div></div>
+    <div class="card"><div class="label">Zones at risk</div><div class="big" id="k-risk" style="color:var(--warn)">—</div><div class="sub">repeat failures, not raw counts</div></div>
+    <div class="card"><div class="label">Installs covered</div><div class="big" id="k-tot">—</div><div class="sub">every scan is a sign-off</div></div>
+  </div>
+
+  <div>
+    <div class="label" style="margin-bottom:12px">Rework risk by zone</div>
+    <div class="row zones" id="zones"></div>
+  </div>
+
+  <div class="row two">
+    <div class="card">
+      <div class="label">Most confused components</div>
+      <div class="sub" style="margin:2px 0 14px">where the same mistake keeps repeating</div>
+      <table><thead><tr><th>Part</th><th>Zone</th><th>Units</th><th>Last</th></tr></thead>
+      <tbody id="confused"></tbody></table>
+    </div>
+    <div class="card">
+      <div class="label">Live from the field</div>
+      <div class="sub" style="margin:2px 0 8px">updates as phones come back into signal</div>
+      <div class="feed" id="feed"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Nonconformances</div>
+    <div class="sub" style="margin:2px 0 14px">every one confirmed by a human at the point of install</div>
+    <table><thead><tr><th>NCR</th><th>Part</th><th>Zone</th><th>Found</th><th>Approved</th><th>Confirmed by</th></tr></thead>
+    <tbody id="ncrs"></tbody></table>
+  </div>
+</main>
+
+<footer>
+  Verdicts are computed on each phone against the approved submittal record — deterministic, offline-capable.
+  This view is a read model; it is never on the safety path.
+  Record is synthetic for the hackathon; the adapter that produces it is a single interface (<span class="mono">app/src/data/adapter.ts</span>).
+</footer>
+
+<script>
+const SERVER = new URLSearchParams(location.search).get('server') || 'http://localhost:8787';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+async function tick(){
+  try{
+    const r = await fetch(SERVER + '/summary', {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    render(await r.json());
+    $('err').innerHTML = '';
+  }catch(e){
+    $('err').innerHTML = '<div class="err">No sync server at ' + esc(SERVER) +
+      ' — start it with <b>node server/index.mjs</b>, or pass ?server=&lt;url&gt;</div>';
+  }
+}
+
+function render(d){
+  $('proj').textContent = d.project.name + '  ·  ' + d.project.id;
+  $('upd').textContent = 'LIVE · ' + new Date(d.updated_at).toLocaleTimeString();
+
+  const verified = d.zones.reduce((a,z)=>a+z.verified,0);
+  const total    = d.zones.reduce((a,z)=>a+z.total,0);
+  $('k-pct').textContent = (total ? Math.round(verified/total*100) : 0) + '%';
+  $('k-pct-sub').textContent = verified + ' of ' + total + ' installs · ' + d.zones.reduce((a,z)=>a+z.pending,0) + ' still unverified';
+  $('k-ncr').textContent = d.openNcrs;
+  $('k-ncr-sub').textContent = d.totalNcrs + ' raised in total';
+  $('k-risk').textContent = d.zones.filter(z=>z.risk==='HIGH'||z.risk==='ELEVATED').length;
+  $('k-tot').textContent = total;
+
+  $('zones').innerHTML = d.zones.map(z => `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+        <div class="zone-name">${esc(z.name)}</div>
+        <span class="pill ${z.risk}">${z.risk}</span>
+      </div>
+      <div class="bar"><i style="width:${z.pct}%;background:${z.pct>75?'var(--ok)':z.pct>40?'var(--warn)':'var(--stop)'}"></i></div>
+      <div class="sub">${z.pct}% field-verified · ${z.pending} awaiting · ${z.ncrs} NCR${z.ncrs===1?'':'s'}</div>
+    </div>`).join('');
+
+  $('confused').innerHTML = d.mostConfused.length ? d.mostConfused.map(c => `
+    <tr><td><b>${esc(c.sku)}</b></td><td class="mono">${esc(c.zone_id)}</td>
+    <td style="color:${c.count>=3?'var(--stop)':'var(--warn)'};font-weight:800">${c.count}</td>
+    <td class="mono">${esc(c.last)}</td></tr>`).join('')
+    : '<tr><td colspan="4" class="sub">Nothing repeating yet.</td></tr>';
+
+  $('feed').innerHTML = d.recent.length ? d.recent.map(e => `
+    <div><span class="tag ${e.kind}">${e.kind}</span>
+    <span>${esc(e.text)}</span></div>`).join('')
+    : '<div class="sub">Waiting for the first scan to sync…</div>';
+
+  $('ncrs').innerHTML = d.ncrs.map(n => `
+    <tr><td class="mono">${esc(n.id)}</td><td><b>${esc(n.sku)}</b><br><span class="mono">${esc(n.serial)}</span></td>
+    <td class="mono">${esc(n.zone_id)}</td>
+    <td style="color:var(--stop);font-weight:800">Rev ${esc(n.installed_rev)}</td>
+    <td style="color:var(--ok);font-weight:800">Rev ${esc(n.approved_rev)}</td>
+    <td class="sub">${esc(n.confirmed_by || 'awaiting confirmation')}</td></tr>`).join('');
+}
+
+tick(); setInterval(tick, 3000);
+</script>
+</body>
+</html>

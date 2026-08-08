@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Witness — Control Panel</title>
+<style>
+  :root{
+    --bg:#0B0D10; --card:#14181D; --line:#252B33; --text:#F2F5F8; --dim:#8B95A1;
+    --ok:#12B76A; --stop:#E5484D; --warn:#F5A524; --accent:#4C8DFF;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:22px 28px 16px;border-bottom:1px solid var(--line);display:flex;
+         justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+         position:sticky;top:0;background:var(--bg);z-index:10}
+  h1{margin:0;font-size:21px;font-weight:900;letter-spacing:4px}
+  .sub{color:var(--dim);font-size:12px}
+  main{padding:22px 28px 60px;max-width:1180px;display:grid;gap:18px}
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .card h2{margin:0 0 4px;font-size:13px;font-weight:800;letter-spacing:1.6px;
+           text-transform:uppercase;color:var(--dim)}
+  .hint{color:var(--dim);font-size:12.5px;margin:0 0 14px;line-height:1.5}
+  button{font:inherit;font-weight:700;border:0;border-radius:11px;cursor:pointer;
+         padding:13px 16px;background:#222932;color:var(--text);transition:.12s;width:100%}
+  button:hover:not(:disabled){filter:brightness(1.25)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.primary{background:var(--accent);color:#04101F}
+  button.good{background:var(--ok);color:#04140C}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--dim);font-weight:600}
+  .row{display:flex;gap:9px;flex-wrap:wrap}
+  .row > *{flex:1;min-width:120px}
+  .stack{display:grid;gap:9px}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;
+        font-size:11px;font-weight:800;letter-spacing:.6px}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .up{background:#06301E;color:var(--ok)} .up .dot{background:var(--ok)}
+  .down{background:#2A2E35;color:var(--dim)} .down .dot{background:var(--dim)}
+  .busy{background:#3A2606;color:var(--warn)} .busy .dot{background:var(--warn);animation:p 1s infinite}
+  .bad{background:#3A0D0F;color:var(--stop)} .bad .dot{background:var(--stop)}
+  @keyframes p{50%{opacity:.25}}
+  pre{background:#05070A;border:1px solid var(--line);border-radius:10px;padding:12px;
+      margin:12px 0 0;max-height:230px;overflow:auto;font-size:11.5px;line-height:1.55;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre-wrap;
+      word-break:break-word;color:#C8D2DC}
+  pre .cmd{color:var(--accent)} pre .err{color:#FF9AA0}
+  input,select{font:inherit;width:100%;background:#05070A;border:1px solid var(--line);
+        border-radius:10px;color:var(--text);padding:11px 13px}
+  label{display:block;font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--dim);
+        margin:12px 0 6px;text-transform:uppercase}
+  .qr{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  .qr img{background:#fff;border-radius:12px;padding:10px;width:200px;height:200px}
+  .url{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;color:var(--accent);
+       word-break:break-all;font-weight:700}
+  .steps{counter-reset:s;display:grid;gap:10px;margin:0;padding:0;list-style:none}
+  .steps li{counter-increment:s;display:grid;grid-template-columns:26px 1fr;gap:11px;align-items:start}
+  .steps li::before{content:counter(s);background:#222932;border-radius:50%;width:24px;height:24px;
+       display:grid;place-items:center;font-size:11px;font-weight:900;color:var(--dim)}
+  .steps li.done::before{background:var(--ok);color:#04140C;content:"✓"}
+  .steps small{color:var(--dim);display:block;font-size:12px}
+  .banner{border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:4px}
+  .banner.bad{background:#3A0D0F;color:#FFC9CB}
+  .banner.warn{background:#3A2606;color:#FFE1AE}
+  .banner.good{background:#06301E;color:#A9EFC8}
+  .wide{grid-column:1/-1}
+  .chk{display:grid;gap:7px;margin-top:12px}
+  .chk div{display:grid;grid-template-columns:20px 1fr auto;gap:10px;align-items:baseline;
+           font-size:13px;padding:7px 0;border-top:1px solid var(--line)}
+  .chk div:first-child{border-top:0}
+  .chk i{font-style:normal;font-weight:900}
+  .chk .y i{color:var(--ok)} .chk .n i{color:var(--stop)}
+  .chk small{color:var(--dim);font-size:11.5px;text-align:right;word-break:break-all;max-width:46ch}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>WITNESS</h1>
+    <div class="sub">control panel — everything without a terminal</div>
+  </div>
+  <div class="row" style="flex:0 0 auto">
+    <button class="ghost" style="min-width:auto" onclick="openFolder()">Open folder</button>
+    <button class="ghost" style="min-width:auto" onclick="quit()">Quit everything</button>
+  </div>
+</header>
+
+<main>
+  <div id="alerts"></div>
+
+  <div class="card wide" id="pathcard" style="display:none;border-color:var(--warn)">
+    <h2 style="color:var(--warn)">⚠ This folder is too deep for Windows</h2>
+    <p class="hint" style="margin-bottom:12px">
+      Windows refuses paths longer than 260 characters. This project currently sits
+      <b><span id="pathlen">?</span> characters</b> deep, in a temporary session folder —
+      so git fails with <i>"Filename too long"</i>, builds fail, and
+      <code>node_modules</code> may be broken in ways that look like other problems.
+    </p>
+    <p class="hint" style="margin-bottom:12px">
+      Press below to copy everything to <code id="pathdest">…</code>. Your source,
+      docs, settings and Expo token all come along; <code>node_modules</code> is left
+      behind because it rebuilds in seconds and is the main thing that breaks.
+    </p>
+    <button class="primary" onclick="relocate()">Move the project somewhere shorter</button>
+    <div id="pathmsg" class="hint" style="margin:12px 0 0"></div>
+  </div>
+
+  <div class="card wide">
+    <h2>Start here</h2>
+    <ol class="steps" id="steps">
+      <li id="s-node"><div><b>Node 22+</b><small id="s-node-x">checking…</small></div></li>
+      <li id="s-install"><div><b>Install dependencies</b><small>One time, 2–4 minutes.</small></div></li>
+      <li id="s-test"><div><b>Run the engine tests</b><small id="s-test-x">Proves the safety logic before any phone is involved.</small></div></li>
+      <li id="s-expo"><div><b>Start the app</b><small>Then scan the QR with Expo Go.</small></div></li>
+    </ol>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <h2>Phone app <span id="p-expo" class="pill down"><i class="dot"></i>STOPPED</span></h2>
+      <p class="hint">Starts Expo. Scan the code below with <b>Expo Go</b> on an Android
+      phone that is on the same wifi.</p>
+      <div class="row">
+        <button class="primary" id="b-expo" onclick="run('expo')">Start app</button>
+        <button class="ghost" onclick="stop('expo')">Stop</button>
+      </div>
+      <div class="row" style="margin-top:9px">
+        <button class="ghost" onclick="run('expoTunnel')">Start in tunnel mode (if wifi won't connect)</button>
+      </div>
+      <div id="qrbox" style="display:none;margin-top:16px" class="qr">
+        <img id="qrimg" alt="Expo QR code" />
+        <div>
+          <div class="sub" style="margin-bottom:6px">Or type this into Expo Go</div>
+          <div class="url" id="expurl"></div>
+          <button class="ghost" style="margin-top:10px;width:auto;padding:8px 14px" onclick="copyUrl()">Copy</button>
+        </div>
+      </div>
+      <pre id="log-expo"></pre>
+      <button class="ghost" style="margin-top:9px" onclick="copyLog('log-expo')">Copy log</button>
+    </div>
+
+    <div class="card">
+      <h2>Site systems <span id="p-server" class="pill down"><i class="dot"></i>STOPPED</span></h2>
+      <p class="hint">The sync server receives what the phones queue up. The dashboard is
+      the supervisor view. Neither is needed for scanning to work.</p>
+      <div class="row">
+        <button class="primary" id="b-server" onclick="run('server')">Start sync server</button>
+        <button class="ghost" onclick="stop('server')">Stop</button>
+      </div>
+      <div class="row" style="margin-top:9px">
+        <button class="good" onclick="view('dashboard')">Open dashboard</button>
+        <button class="ghost" onclick="resetDemo()">Reset demo data</button>
+      </div>
+      <pre id="log-server"></pre>
+      <button class="ghost" style="margin-top:9px" onclick="copyLog('log-server')">Copy log</button>
+    </div>
+
+    <div class="card">
+      <h2>Checks &amp; setup</h2>
+      <p class="hint">The engine tests need nothing installed — the fastest way to confirm
+      the project is healthy.</p>
+      <div class="stack">
+        <button class="good" onclick="run('test')">Run engine tests</button>
+        <div class="row">
+          <button onclick="run('install')">Install dependencies</button>
+          <button onclick="run('doctor')">Fix package versions</button>
+        </div>
+      </div>
+      <pre id="log-test"></pre>
+      <button class="ghost" style="margin-top:9px" onclick="copyLog('log-test')">Copy log</button>
+    </div>
+
+    <div class="card">
+      <h2>Connection</h2>
+      <p class="hint">Your phone cannot reach <b>localhost</b> — on the phone that means the
+      phone. Pick the network your phone is also on.</p>
+      <label>This computer's address</label>
+      <select id="ipsel" onchange="refresh()"></select>
+      <label>Model key <span style="text-transform:none;font-weight:600">— optional, enables nameplate reading</span></label>
+      <input id="llmurl" placeholder="API base URL, e.g. https://api.anthropic.com/v1" />
+      <input id="llmkey" type="password" placeholder="API key" style="margin-top:8px" />
+      <button class="primary" style="margin-top:12px" onclick="saveEnv()">Save settings</button>
+      <div id="envmsg" class="sub" style="margin-top:9px"></div>
+
+      <!-- Isolates the firewall question in ten seconds. If the phone's browser
+           can load this, the phone can sync; if it cannot, no amount of app
+           debugging will help. -->
+      <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
+        <div class="label" style="margin:0 0 8px">Test from the phone</div>
+        <p class="hint" style="margin:0 0 10px">Scan this with the phone's camera. If it
+        shows <code>{"ok":true}</code>, the phone can reach the sync server.</p>
+        <div class="qr"><img id="healthqr" alt="health check QR" style="width:150px;height:150px" />
+          <div><div class="url" id="healthurl" style="font-size:13px"></div>
+          <div class="sub" style="margin-top:8px">Needs the sync server running.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Printable tags</h2>
+      <p class="hint">Stick these on real equipment. Print at <b>100% scale</b> — "fit to page"
+      shrinks the code and it stops scanning.</p>
+      <div class="stack">
+        <button class="good" onclick="view('tags')">Open tag sheet (PDF)</button>
+        <div class="row">
+          <button class="ghost" onclick="run('seed')">Rebuild demo data</button>
+          <button class="ghost" onclick="run('tags')">Rebuild tag sheet</button>
+        </div>
+      </div>
+      <pre id="log-tags"></pre>
+      <button class="ghost" style="margin-top:9px" onclick="copyLog('log-tags')">Copy log</button>
+    </div>
+
+    <div class="card">
+      <h2>Demo sequence</h2>
+      <p class="hint">Set the phone to <b>Zone A</b>, then scan in this order.</p>
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+        <tr><td style="padding:7px 0;border-bottom:1px solid var(--line)"><b>SN-4471</b><br><small style="color:var(--dim)">Zone A</small></td>
+            <td style="padding:7px 0;border-bottom:1px solid var(--line);color:var(--stop)"><b>STOP</b><br><small style="color:var(--dim)">Rev B vs Rev C, memory fires</small></td></tr>
+        <tr><td style="padding:7px 0;border-bottom:1px solid var(--line)"><b>SN-4472</b><br><small style="color:var(--dim)">Zone A</small></td>
+            <td style="padding:7px 0;border-bottom:1px solid var(--line);color:var(--ok)"><b>CORRECT</b><br><small style="color:var(--dim)">scan is the sign-off</small></td></tr>
+        <tr><td style="padding:7px 0;border-bottom:1px solid var(--line)"><b>SN-9999</b><br><small style="color:var(--dim)">any zone</small></td>
+            <td style="padding:7px 0;border-bottom:1px solid var(--line);color:var(--warn)"><b>NOT ON RECORD</b><br><small style="color:var(--dim)">refuses to guess</small></td></tr>
+        <tr><td style="padding:7px 0"><b>SN-4475</b><br><small style="color:var(--dim)">Zone D</small></td>
+            <td style="padding:7px 0;color:var(--warn)"><b>NO APPROVAL HERE</b><br><small style="color:var(--dim)">advisory, not a ruling</small></td></tr>
+      </table>
+      <p class="hint" style="margin:14px 0 0">Then: airplane mode on → scan → confirm →
+      "1 queued" → airplane mode off → watch it clear.</p>
+    </div>
+
+    <div class="card wide">
+      <h2>Build the phone app (APK)</h2>
+      <p class="hint">An APK installs directly on a phone with no Expo Go and no
+      Metro — which is what you want for filming the offline sequence, because
+      Expo Go streams its bundle over wifi and can drop mid-take.
+      <b>Save your connection settings first</b>: the server address is baked in
+      at build time.</p>
+
+      <div style="background:#05070A;border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:14px">
+        <div class="label" style="margin:0 0 6px">Step 1 — connect your Expo account
+          <span id="tokstate" class="pill down" style="margin-left:8px"><i class="dot"></i>NOT SET</span>
+        </div>
+        <p class="hint" style="margin:0 0 10px">Open
+          <a href="https://expo.dev/settings/access-tokens" target="_blank"
+             style="color:var(--accent)">expo.dev → Access tokens</a>,
+          press <b>Create token</b>, copy it, paste it here. This avoids logging in
+          through a terminal. Stored on this PC only — it is never put in the app.</p>
+        <input id="expotoken" type="password" placeholder="Paste your Expo access token" />
+        <button class="ghost" style="margin-top:9px" onclick="saveToken()">Save token &amp; check</button>
+      </div>
+
+      <div style="background:#05070A;border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:14px">
+        <div class="label" style="margin:0 0 6px">Step 2 — set up git
+          <span id="gitstate" class="pill down" style="margin-left:8px"><i class="dot"></i>NOT SET UP</span>
+        </div>
+        <p class="hint" style="margin:0 0 10px">EAS uploads your source through git, so a
+          repository is required before building. This also happens to be the first
+          step for putting the project on GitHub — see
+          <a href="/view/publishing" target="_blank" style="color:var(--accent)">PUBLISHING.md</a>.
+          Your token and <code>.env</code> are excluded automatically.</p>
+        <button class="ghost" onclick="run('gitInit').then(()=>setTimeout(buildCheck,3000))">Set up git</button>
+      </div>
+
+      <div class="label" style="margin:0 0 8px">Step 3 — build</div>
+      <div class="row">
+        <button class="primary" onclick="buildApk('cloud')">Build in the cloud (recommended)</button>
+        <button class="ghost" onclick="buildApk('local')">Build on this PC</button>
+      </div>
+      <p class="hint" style="margin:10px 0 0">Cloud needs a free Expo account and
+      no Android tooling. Local needs Android Studio and JDK 17.
+      First-time cloud builds ask you to log in — if it stops, press
+      <b>Copy log</b> and run <code>npx eas-cli login</code> once in a terminal.</p>
+
+      <div class="row" style="margin-top:10px">
+        <button class="ghost" onclick="view('buildguide')">Step-by-step guide</button>
+        <button class="ghost" onclick="buildCheck()">Check build tools</button>
+        <button class="ghost" id="b-apk" style="display:none" onclick="view('apk')">Download the built APK</button>
+      </div>
+      <div class="chk" id="buildchk"></div>
+      <pre id="log-build"></pre>
+      <button class="ghost" style="margin-top:9px" onclick="copyLog('log-build')">Copy log</button>
+    </div>
+
+    <div class="card wide">
+      <h2>Check everything</h2>
+      <p class="hint">Runs real checks against this machine — not assumptions.</p>
+      <button class="primary" onclick="selftest()">Run all checks</button>
+      <div class="chk" id="chk"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const since = {};
+
+async function api(path, body){
+  const r = await fetch(path, body ? {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+  } : undefined);
+  return r.json();
+}
+
+async function run(a){
+  const r = await api('/api/run', {action:a});
+  if(r && r.ok === false) alertMsg('<b>Could not start:</b> ' + (r.error||'unknown error'), 'bad');
+  else alertMsg('');
+  return r;
+}
+const stop = n => api('/api/stop', {name:n});
+
+/* Files are served over http by the panel, so the browser just opens a tab.
+   Asking the OS to launch a file:// URL from a background process is the thing
+   that silently did nothing before. */
+function view(what){
+  const w = window.open('/view/' + what, '_blank');
+  if(!w) alertMsg('Your browser blocked the new tab. Allow pop-ups for localhost, or open <code>/view/'+what+'</code> manually.','warn');
+}
+
+async function openFolder(){
+  const r = await api('/api/open-folder', {});
+  if(!r.ok) alertMsg('Could not open the folder. It is at:<br><code>'+(r.path||'')+'</code>','warn');
+}
+
+const quit = async () => { await api('/api/quit',{}); document.body.innerHTML =
+  '<div style="padding:60px;text-align:center;color:#8B95A1">Everything stopped. You can close this tab.</div>'; };
+
+async function resetDemo(){
+  const r = await api('/api/reset-demo', {});
+  if(r.ok) alertMsg('Demo data reset to the seeded state.','good');
+  else alertMsg(r.error||'Reset failed','warn');
+}
+
+function flash(msg){
+  const el = $('envmsg'); el.textContent = msg; el.style.color = 'var(--ok)';
+  setTimeout(()=>{ if(el.textContent===msg) el.textContent=''; }, 3000);
+}
+
+function alertMsg(html, kind){
+  $('alerts').innerHTML = html ? `<div class="banner ${kind||'warn'}">${html}</div>` : '';
+  if(html) window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function pill(el, status, running){
+  const m = running ? ['busy','RUNNING'] : status==='done' ? ['up','DONE']
+          : status==='error' ? ['bad','STOPPED'] : ['down','STOPPED'];
+  el.className = 'pill ' + m[0];
+  el.innerHTML = '<i class="dot"></i>' + m[1];
+}
+
+async function refresh(){
+  const s = await api('/api/state');
+
+  $('s-node').classList.toggle('done', s.nodeOk);
+  $('s-node-x').textContent = s.nodeOk ? `Node ${s.node} — good.`
+    : `Node ${s.node} is too old. Install the LTS from nodejs.org and restart the panel.`;
+  if(!s.nodeOk) alertMsg('<b>Node '+s.node+' is too old.</b> The tests and the app need Node 22 or newer.','bad');
+
+  $('s-install').classList.toggle('done', s.installed);
+
+  const t = s.procs.test;
+  const passed = Boolean(t && t.meta && t.meta.exitCode === 0);
+  $('s-test').classList.toggle('done', passed);
+  if(t && t.meta && t.meta.pass !== undefined){
+    $('s-test-x').textContent = passed
+      ? (t.meta.pass >= 0 ? `${t.meta.pass} tests passed.` : 'Passed.')
+      : `${t.meta.fail || '?'} failing — see the log.`;
+  }
+
+  $('s-expo').classList.toggle('done', Boolean(s.expUrl));
+  pill($('p-expo'), s.procs.expo?.status, s.procs.expo?.running);
+  pill($('p-server'), s.serverUp ? 'done' : s.procs.server?.status, s.procs.server?.running || s.serverUp);
+  $('b-expo').disabled = Boolean(s.procs.expo?.running);
+  $('b-server').disabled = Boolean(s.procs.server?.running);
+
+  if(s.expUrl){
+    $('qrbox').style.display = 'flex';
+    $('expurl').textContent = s.expUrl;
+    const src = '/api/qr?text=' + encodeURIComponent(s.expUrl);
+    if($('qrimg').getAttribute('src') !== src) $('qrimg').setAttribute('src', src);
+  } else $('qrbox').style.display = 'none';
+
+  const sel = $('ipsel');
+  const want = s.ips.map(i=>i.ip+i.iface).join('|');
+  if(sel.dataset.want !== want){
+    sel.dataset.want = want;
+    sel.innerHTML = s.ips.map(i=>
+      `<option value="http://${i.ip}:8787">${i.iface} — ${i.ip}${i.wifi?'  (wifi)':''}${i.virt?'  (virtual)':''}</option>`
+    ).join('') || '<option value="">No network found — check wifi</option>';
+    const cur = s.env.EXPO_PUBLIC_SERVER_URL;
+    if(cur && [...sel.options].some(o=>o.value===cur)) sel.value = cur;
+  }
+  if(document.activeElement !== $('llmurl')) $('llmurl').value = s.env.EXPO_PUBLIC_LLM_URL || '';
+
+  // Health-check QR follows whichever address is selected.
+  const base = sel.value || s.env.EXPO_PUBLIC_SERVER_URL || '';
+  const hurl = base ? base + '/health' : '';
+  if(hurl && $('healthurl').textContent !== hurl){
+    $('healthurl').textContent = hurl;
+    $('healthqr').setAttribute('src', '/api/qr?text=' + encodeURIComponent(hurl));
+  }
+}
+
+async function saveEnv(){
+  const body = { EXPO_PUBLIC_SERVER_URL: $('ipsel').value, EXPO_PUBLIC_LLM_URL: $('llmurl').value };
+  if($('llmkey').value) body.EXPO_PUBLIC_LLM_KEY = $('llmkey').value;
+  await api('/api/env', body);
+  $('llmkey').value = '';
+  flash('Saved. Restart the app for it to take effect.');
+}
+
+function copyLog(id){
+  const t = $(id).innerText.trim();
+  navigator.clipboard.writeText(t || '(empty)').then(()=>flash('Log copied.'),
+    ()=>alertMsg('Could not copy — select the text and copy manually.','warn'));
+}
+function copyUrl(){
+  navigator.clipboard.writeText($('expurl').textContent).then(()=>flash('URL copied.'));
+}
+
+async function relocate(){
+  $('pathmsg').innerHTML = 'Copying…';
+  const r = await api('/api/relocate', {});
+  if(!r.ok){ $('pathmsg').innerHTML = '<span style="color:var(--stop)">'+r.error+'</span>'; return; }
+  document.body.innerHTML =
+    '<div style="padding:60px;max-width:720px;margin:0 auto;color:#F2F5F8;'
+    + 'font:16px/1.6 system-ui">'
+    + '<h2 style="letter-spacing:3px">MOVED</h2>'
+    + '<p>Your project is now at:</p>'
+    + '<p style="font-family:monospace;color:#4C8DFF;font-size:18px">' + r.path + '</p>'
+    + '<ol style="color:#8B95A1"><li>Close this tab and the black window.</li>'
+    + '<li>Open <b>' + r.path + '</b> in File Explorer.</li>'
+    + '<li>Double-click <b>Witness.bat</b> there.</li>'
+    + '<li>Press <b>Install dependencies</b> once, then carry on.</li></ol>'
+    + '<p style="color:#8B95A1;font-size:14px">Work in the new folder from now on — '
+    + 'the old one is a temporary session directory.</p></div>';
+}
+
+async function saveToken(){
+  const t = $('expotoken').value.trim();
+  if(!t){ alertMsg('Paste the token first — expo.dev → Settings → Access tokens.','warn'); return; }
+  await api('/api/expo-token', { token: t });
+  $('expotoken').value = '';
+  alertMsg('Token saved. Checking it…','good');
+  await run('easWhoami');
+  setTimeout(buildCheck, 4000);
+}
+
+async function buildApk(where){
+  const r = await run(where === 'cloud' ? 'buildCloud' : 'buildLocal');
+  if(r && r.ok !== false){
+    alertMsg('Build started — this takes 10–20 minutes. Watch the log below. '
+      + (where==='cloud' ? 'A download link appears at the end.' : 'The APK lands in the witness folder.'), 'good');
+  }
+}
+
+async function buildCheck(){
+  $('buildchk').innerHTML = '<div style="color:var(--dim)">checking…</div>';
+  const d = await api('/api/buildcheck');
+  $('buildchk').innerHTML = d.checks.map(c =>
+    `<div class="${c.ok?'y':'n'}"><i>${c.ok?'✓':'✗'}</i><span>${c.name}</span><small>${
+      String(c.detail).replace(/[&<>]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[x]))}</small></div>`).join('');
+  if(s.path){
+    $('pathcard').style.display = s.path.tooDeep ? '' : 'none';
+    $('pathlen').textContent = s.path.length;
+    $('pathdest').textContent = s.path.suggestion;
+  }
+  const gs = $('gitstate');
+  gs.className = 'pill ' + (d.gitRepo ? 'up' : 'down');
+  gs.innerHTML = '<i class="dot"></i>' + (d.gitRepo ? 'READY' : 'NOT SET UP');
+  const ts = $('tokstate');
+  ts.className = 'pill ' + (d.tokenSet ? 'up' : 'down');
+  ts.innerHTML = '<i class="dot"></i>' + (d.tokenSet ? 'SAVED' : 'NOT SET');
+  $('b-apk').style.display = d.apkExists ? '' : 'none';
+  if(d.apkExists) $('b-apk').textContent = `Download the built APK (${d.apkSize} MB)`;
+}
+
+async function selftest(){
+  $('chk').innerHTML = '<div style="color:var(--dim)">running…</div>';
+  const d = await api('/api/selftest');
+  $('chk').innerHTML = d.checks.map(c =>
+    `<div class="${c.ok?'y':'n'}"><i>${c.ok?'✓':'✗'}</i><span>${c.name}</span><small>${
+      String(c.detail).replace(/[&<>]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[x]))}</small></div>`).join('');
+  const bad = d.checks.filter(c=>!c.ok);
+  if(bad.length) alertMsg('<b>'+bad.length+' check'+(bad.length>1?'s':'')+' failed.</b> See "Check everything" below — each row says what to do.','warn');
+  else alertMsg('All checks passed.','good');
+}
+
+async function pumpLog(name, elId){
+  const el = $(elId); if(!el) return;
+  const d = await api(`/api/log?name=${name}&since=${since[name]||0}`);
+  since[name] = d.now;
+  if(d.lines.length){
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+    for(const l of d.lines){
+      const span = document.createElement('span');
+      span.className = l.kind === 'cmd' ? 'cmd' : l.kind === 'err' ? 'err' : '';
+      span.textContent = l.text + '\n';
+      el.appendChild(span);
+    }
+    while(el.childNodes.length > 500) el.removeChild(el.firstChild);
+    if(atBottom) el.scrollTop = el.scrollHeight;
+  }
+  if(d.meta && d.meta.error && !d.running && !seenErr[name]){
+    seenErr[name] = true;
+    const errs = d.lines.filter(l=>l.kind==='err').slice(-6).map(l=>l.text).join('\n');
+    alertMsg('<b>'+name+' failed</b> — '+d.meta.error +
+      (errs?'<pre style="margin:8px 0 0;max-height:130px">'+errs.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))+'</pre>':'') +
+      '<div style="margin-top:8px;font-size:12px;opacity:.85">Press <b>Copy log</b> under that panel and send it over.</div>','bad');
+  }
+  if(d.running) seenErr[name] = false;
+}
+const seenErr = {};
+
+async function tick(){
+  await refresh();
+  await Promise.all([
+    pumpLog('expo','log-expo'), pumpLog('server','log-server'),
+    pumpLog('test','log-test'), pumpLog('install','log-test'), pumpLog('doctor','log-test'),
+    pumpLog('seed','log-tags'), pumpLog('tags','log-tags'), pumpLog('build','log-build'),
+  ]);
+}
+tick(); setInterval(tick, 1200);
+selftest(); buildCheck();
+</script>
+</body>
+</html>

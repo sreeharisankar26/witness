@@ -1,0 +1,18 @@
+{
+  "name": "witness",
+  "version": "0.1.0",
+  "private": true,
+  "//": "Convenience wrapper so npm works from the witness/ folder too, not only witness/app. The real app package.json is in app/.",
+  "scripts": {
+    "setup": "npm --prefix app install",
+    "doctor": "npm --prefix app run doctor",
+    "test": "npm --prefix app run test",
+    "start": "npm --prefix app run start",
+    "server": "node server/index.mjs",
+    "seed": "python tools/make_seed.py",
+    "tags": "python tools/make_qr_sheet.py"
+  },
+  "dependencies": {
+    "expo": "^54.0.0"
+  }
+}

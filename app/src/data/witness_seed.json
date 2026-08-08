@@ -1,0 +1,1756 @@
+{
+  "_generated": "2026-08-08T19:44:52.593253+00:00",
+  "_note": "SYNTHETIC. Stands in for Kaya's approved submittal record. See app/src/data/adapter.ts.",
+  "record_synced_at": "2026-08-08T06:40:00Z",
+  "_record_synced_at_note": "overwritten at install time by the device",
+  "project": {
+    "id": "PRJ-4471",
+    "name": "Hillside Tower - Block C",
+    "client": "Kaya AI (demo record)"
+  },
+  "zones": [
+    {
+      "id": "ZONE-A",
+      "name": "Zone A - Level 3 Mech Room",
+      "lat": 17.5949,
+      "lng": 78.1229
+    },
+    {
+      "id": "ZONE-B",
+      "name": "Zone B - Level 3 Riser",
+      "lat": 17.5951,
+      "lng": 78.1233
+    },
+    {
+      "id": "ZONE-C",
+      "name": "Zone C - Roof Plant Deck",
+      "lat": 17.5955,
+      "lng": 78.124
+    },
+    {
+      "id": "ZONE-D",
+      "name": "Zone D - Basement Pump Room",
+      "lat": 17.5944,
+      "lng": 78.1221
+    }
+  ],
+  "revisions": [
+    {
+      "id": "REV-0003",
+      "sku": "AHU-04",
+      "rev": "A",
+      "superseded_by": "B",
+      "approved_date": "2026-05-04",
+      "change_note": "Material substitution approved"
+    },
+    {
+      "id": "REV-0004",
+      "sku": "AHU-04",
+      "rev": "B",
+      "superseded_by": "C",
+      "approved_date": "2026-05-18",
+      "change_note": "Dimensional change to mounting flange"
+    },
+    {
+      "id": "REV-0005",
+      "sku": "AHU-04",
+      "rev": "C",
+      "superseded_by": "D",
+      "approved_date": "2026-06-01",
+      "change_note": "Material substitution approved"
+    },
+    {
+      "id": "REV-0006",
+      "sku": "AHU-04",
+      "rev": "D",
+      "superseded_by": null,
+      "approved_date": "2026-06-15",
+      "change_note": "Paperwork-only: revised test certificate"
+    },
+    {
+      "id": "REV-0023",
+      "sku": "CBL-90",
+      "rev": "A",
+      "superseded_by": "B",
+      "approved_date": "2026-05-04",
+      "change_note": "Vendor change, form/fit identical"
+    },
+    {
+      "id": "REV-0024",
+      "sku": "CBL-90",
+      "rev": "B",
+      "superseded_by": "C",
+      "approved_date": "2026-05-18",
+      "change_note": "Vendor change, form/fit identical"
+    },
+    {
+      "id": "REV-0025",
+      "sku": "CBL-90",
+      "rev": "C",
+      "superseded_by": "D",
+      "approved_date": "2026-06-01",
+      "change_note": "Paperwork-only: revised test certificate"
+    },
+    {
+      "id": "REV-0026",
+      "sku": "CBL-90",
+      "rev": "D",
+      "superseded_by": null,
+      "approved_date": "2026-06-15",
+      "change_note": "Paperwork-only: revised test certificate"
+    },
+    {
+      "id": "REV-0021",
+      "sku": "DMP-05",
+      "rev": "A",
+      "superseded_by": "B",
+      "approved_date": "2026-05-04",
+      "change_note": "Vendor change, form/fit identical"
+    },
+    {
+      "id": "REV-0022",
+      "sku": "DMP-05",
+      "rev": "B",
+      "superseded_by": null,
+      "approved_date": "2026-05-18",
+      "change_note": "Dimensional change to mounting flange"
+    },
+    {
+      "id": "REV-0018",
+      "sku": "FCU-17",
+      "rev": "A",
+      "superseded_by": "B",
+      "approved_date": "2026-05-04",
+      "change_note": "Coating spec updated"
+    },
+    {
+      "id": "REV-0019",
+      "sku": "FCU-17",
+      "rev": "B",
+      "superseded_by": "C",
+      "approved_date": "2026-05-18",
+      "change_note": "Dimensional change to mounting flange"
+    },
+    {
+      "id": "REV-0020",
+      "sku": "FCU-17",
+      "rev": "C",
+      "superseded_by": null,
+      "approved_date": "2026-06-01",
+      "change_note": "Vendor change, form/fit identical"
+    },
+    {
+      "id": "REV-9000",
+      "sku": "GT-12",
+      "rev": "A",
+      "superseded_by": "B",
+      "approved_date": "2026-06-02",
+      "change_note": "Initial approved issue"
+    },
+    {
+      "id": "REV-9001",
+      "sku": "GT-12",
+      "rev": "B",
+      "superseded_by": "C",
+      "approved_date": "2026-07-03",
+      "change_note": "Mounting flange thickened to 12mm"
+    },
+    {
+      "id": "REV-9002",
+      "sku": "GT-12",
+      "rev": "C",
+      "superseded_by": null,
+      "approved_date": "2026-07-31",
+      "change_note": "Anchor spec revised - 12mm flange retained, M16 anchors mandated"
+    },
+    {
+      "id": "REV-0029",
+      "sku": "ISO-02",
+      "rev": "A",
+      "superseded_by": "B",
+      "approved_date": "2026-05-04",
+      "change_note": "Vendor change, form/fit identical"
+    },
+    {
+      "id": "REV-0030",
+      "sku": "ISO-02",
+      "rev": "B",
+      "superseded_by": "C",
+      "approved_date": "2026-05-18",
+      "change_note": "Coating spec updated"
+    },
+    {
+      "id": "REV-0031",
+      "sku": "ISO-02",
+      "rev": "C",
+      "superseded_by": "D",
+      "approved_date": "2026-06-01",
+      "change_note": "Coating spec updated"
+    },
+    {
+      "id": "REV-0032",
+      "sku": "ISO-02",
+      "rev": "D",
+      "superseded_by": null,
+      "approved_date": "2026-06-15",
+      "change_note": "Coating spec updated"
+    },
+    {
+      "id": "REV-0014",
+      "sku": "PMP-31",
+      "rev": "A",
+      "superseded_by": "B",
+      "approved_date": "2026-05-04",
+      "change_note": "Paperwork-only: revised test certificate"
+    },
+    {
+      "id": "REV-0015",
+      "sku": "PMP-31",
+      "rev": "B",
+      "superseded_by": "C",
+      "approved_date": "2026-05-18",
+      "change_note": "Coating spec updated"
+    },
+    {
+      "id": "REV-0016",
+      "sku": "PMP-31",
+      "rev": "C",
+      "superseded_by": "D",
+      "approved_date": "2026-06-01",
+      "change_note": "Vendor change, form/fit identical"
+    },
+    {
+      "id": "REV-0017",
+      "sku": "PMP-31",
+      "rev": "D",
+      "superseded_by": null,
+      "approved_date": "2026-06-15",
+      "change_note": "Paperwork-only: revised test certificate"
+    },
+    {
+      "id": "REV-0010",
+      "sku": "PNL-08",
+      "rev": "A",
+      "superseded_by": "B",
+      "approved_date": "2026-05-04",
+      "change_note": "Dimensional change to mounting flange"
+    },
+    {
+      "id": "REV-0011",
+      "sku": "PNL-08",
+      "rev": "B",
+      "superseded_by": "C",
+      "approved_date": "2026-05-18",
+      "change_note": "Vendor change, form/fit identical"
+    },
+    {
+      "id": "REV-0012",
+      "sku": "PNL-08",
+      "rev": "C",
+      "superseded_by": "D",
+      "approved_date": "2026-06-01",
+      "change_note": "Coating spec updated"
+    },
+    {
+      "id": "REV-0013",
+      "sku": "PNL-08",
+      "rev": "D",
+      "superseded_by": null,
+      "approved_date": "2026-06-15",
+      "change_note": "Paperwork-only: revised test certificate"
+    },
+    {
+      "id": "REV-0027",
+      "sku": "SPR-14",
+      "rev": "A",
+      "superseded_by": "B",
+      "approved_date": "2026-05-04",
+      "change_note": "Vendor change, form/fit identical"
+    },
+    {
+      "id": "REV-0028",
+      "sku": "SPR-14",
+      "rev": "B",
+      "superseded_by": null,
+      "approved_date": "2026-05-18",
+      "change_note": "Paperwork-only: revised test certificate"
+    },
+    {
+      "id": "REV-0007",
+      "sku": "VLV-22",
+      "rev": "A",
+      "superseded_by": "B",
+      "approved_date": "2026-05-04",
+      "change_note": "Paperwork-only: revised test certificate"
+    },
+    {
+      "id": "REV-0008",
+      "sku": "VLV-22",
+      "rev": "B",
+      "superseded_by": "C",
+      "approved_date": "2026-05-18",
+      "change_note": "Material substitution approved"
+    },
+    {
+      "id": "REV-0009",
+      "sku": "VLV-22",
+      "rev": "C",
+      "superseded_by": null,
+      "approved_date": "2026-06-01",
+      "change_note": "Material substitution approved"
+    }
+  ],
+  "submittals": [
+    {
+      "id": "SUB-0001",
+      "sku": "GT-12",
+      "description": "Grout Termination Unit, 50mm",
+      "discipline": "Structural",
+      "zone_id": "ZONE-A",
+      "approved_rev": "C",
+      "approved_date": "2026-07-31",
+      "doc_ref": "SUB-0001-GT-12-RC.pdf"
+    },
+    {
+      "id": "SUB-0002",
+      "sku": "AHU-04",
+      "description": "Air Handling Unit, 4000 CMH",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-A",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0002-AHU-04-RD.pdf"
+    },
+    {
+      "id": "SUB-0003",
+      "sku": "VLV-22",
+      "description": "Butterfly Valve, DN200 PN16",
+      "discipline": "Plumbing",
+      "zone_id": "ZONE-A",
+      "approved_rev": "C",
+      "approved_date": "2026-06-01",
+      "doc_ref": "SUB-0003-VLV-22-RC.pdf"
+    },
+    {
+      "id": "SUB-0004",
+      "sku": "PNL-08",
+      "description": "Distribution Panel, 400A TPN",
+      "discipline": "Electrical",
+      "zone_id": "ZONE-A",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0004-PNL-08-RD.pdf"
+    },
+    {
+      "id": "SUB-0005",
+      "sku": "PMP-31",
+      "description": "End-Suction Pump, 30 kW",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-A",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0005-PMP-31-RD.pdf"
+    },
+    {
+      "id": "SUB-0006",
+      "sku": "FCU-17",
+      "description": "Fan Coil Unit, ceiling concealed",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-A",
+      "approved_rev": "C",
+      "approved_date": "2026-06-01",
+      "doc_ref": "SUB-0006-FCU-17-RC.pdf"
+    },
+    {
+      "id": "SUB-0007",
+      "sku": "DMP-05",
+      "description": "Fire Damper, 600x400",
+      "discipline": "Fire",
+      "zone_id": "ZONE-A",
+      "approved_rev": "B",
+      "approved_date": "2026-05-18",
+      "doc_ref": "SUB-0007-DMP-05-RB.pdf"
+    },
+    {
+      "id": "SUB-0008",
+      "sku": "CBL-90",
+      "description": "LV Cable Tray, 300mm perforated",
+      "discipline": "Electrical",
+      "zone_id": "ZONE-A",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0008-CBL-90-RD.pdf"
+    },
+    {
+      "id": "SUB-0009",
+      "sku": "SPR-14",
+      "description": "Sprinkler Head, pendent K80",
+      "discipline": "Fire",
+      "zone_id": "ZONE-A",
+      "approved_rev": "B",
+      "approved_date": "2026-05-18",
+      "doc_ref": "SUB-0009-SPR-14-RB.pdf"
+    },
+    {
+      "id": "SUB-0010",
+      "sku": "ISO-02",
+      "description": "Vibration Isolator, spring 25mm",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-A",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0010-ISO-02-RD.pdf"
+    },
+    {
+      "id": "SUB-0011",
+      "sku": "GT-12",
+      "description": "Grout Termination Unit, 50mm",
+      "discipline": "Structural",
+      "zone_id": "ZONE-B",
+      "approved_rev": "B",
+      "approved_date": "2026-05-18",
+      "doc_ref": "SUB-0011-GT-12-RB.pdf"
+    },
+    {
+      "id": "SUB-0012",
+      "sku": "AHU-04",
+      "description": "Air Handling Unit, 4000 CMH",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-B",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0012-AHU-04-RD.pdf"
+    },
+    {
+      "id": "SUB-0013",
+      "sku": "VLV-22",
+      "description": "Butterfly Valve, DN200 PN16",
+      "discipline": "Plumbing",
+      "zone_id": "ZONE-B",
+      "approved_rev": "C",
+      "approved_date": "2026-06-01",
+      "doc_ref": "SUB-0013-VLV-22-RC.pdf"
+    },
+    {
+      "id": "SUB-0014",
+      "sku": "PNL-08",
+      "description": "Distribution Panel, 400A TPN",
+      "discipline": "Electrical",
+      "zone_id": "ZONE-B",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0014-PNL-08-RD.pdf"
+    },
+    {
+      "id": "SUB-0015",
+      "sku": "DMP-05",
+      "description": "Fire Damper, 600x400",
+      "discipline": "Fire",
+      "zone_id": "ZONE-B",
+      "approved_rev": "B",
+      "approved_date": "2026-05-18",
+      "doc_ref": "SUB-0015-DMP-05-RB.pdf"
+    },
+    {
+      "id": "SUB-0016",
+      "sku": "CBL-90",
+      "description": "LV Cable Tray, 300mm perforated",
+      "discipline": "Electrical",
+      "zone_id": "ZONE-B",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0016-CBL-90-RD.pdf"
+    },
+    {
+      "id": "SUB-0017",
+      "sku": "SPR-14",
+      "description": "Sprinkler Head, pendent K80",
+      "discipline": "Fire",
+      "zone_id": "ZONE-B",
+      "approved_rev": "B",
+      "approved_date": "2026-05-18",
+      "doc_ref": "SUB-0017-SPR-14-RB.pdf"
+    },
+    {
+      "id": "SUB-0018",
+      "sku": "ISO-02",
+      "description": "Vibration Isolator, spring 25mm",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-B",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0018-ISO-02-RD.pdf"
+    },
+    {
+      "id": "SUB-0019",
+      "sku": "GT-12",
+      "description": "Grout Termination Unit, 50mm",
+      "discipline": "Structural",
+      "zone_id": "ZONE-C",
+      "approved_rev": "B",
+      "approved_date": "2026-05-18",
+      "doc_ref": "SUB-0019-GT-12-RB.pdf"
+    },
+    {
+      "id": "SUB-0020",
+      "sku": "AHU-04",
+      "description": "Air Handling Unit, 4000 CMH",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-C",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0020-AHU-04-RD.pdf"
+    },
+    {
+      "id": "SUB-0021",
+      "sku": "PNL-08",
+      "description": "Distribution Panel, 400A TPN",
+      "discipline": "Electrical",
+      "zone_id": "ZONE-C",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0021-PNL-08-RD.pdf"
+    },
+    {
+      "id": "SUB-0022",
+      "sku": "PMP-31",
+      "description": "End-Suction Pump, 30 kW",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-C",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0022-PMP-31-RD.pdf"
+    },
+    {
+      "id": "SUB-0023",
+      "sku": "FCU-17",
+      "description": "Fan Coil Unit, ceiling concealed",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-C",
+      "approved_rev": "C",
+      "approved_date": "2026-06-01",
+      "doc_ref": "SUB-0023-FCU-17-RC.pdf"
+    },
+    {
+      "id": "SUB-0024",
+      "sku": "DMP-05",
+      "description": "Fire Damper, 600x400",
+      "discipline": "Fire",
+      "zone_id": "ZONE-C",
+      "approved_rev": "B",
+      "approved_date": "2026-05-18",
+      "doc_ref": "SUB-0024-DMP-05-RB.pdf"
+    },
+    {
+      "id": "SUB-0025",
+      "sku": "CBL-90",
+      "description": "LV Cable Tray, 300mm perforated",
+      "discipline": "Electrical",
+      "zone_id": "ZONE-C",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0025-CBL-90-RD.pdf"
+    },
+    {
+      "id": "SUB-0026",
+      "sku": "SPR-14",
+      "description": "Sprinkler Head, pendent K80",
+      "discipline": "Fire",
+      "zone_id": "ZONE-C",
+      "approved_rev": "B",
+      "approved_date": "2026-05-18",
+      "doc_ref": "SUB-0026-SPR-14-RB.pdf"
+    },
+    {
+      "id": "SUB-0027",
+      "sku": "ISO-02",
+      "description": "Vibration Isolator, spring 25mm",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-C",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0027-ISO-02-RD.pdf"
+    },
+    {
+      "id": "SUB-0028",
+      "sku": "GT-12",
+      "description": "Grout Termination Unit, 50mm",
+      "discipline": "Structural",
+      "zone_id": "ZONE-D",
+      "approved_rev": "B",
+      "approved_date": "2026-05-18",
+      "doc_ref": "SUB-0028-GT-12-RB.pdf"
+    },
+    {
+      "id": "SUB-0029",
+      "sku": "AHU-04",
+      "description": "Air Handling Unit, 4000 CMH",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-D",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0029-AHU-04-RD.pdf"
+    },
+    {
+      "id": "SUB-0030",
+      "sku": "VLV-22",
+      "description": "Butterfly Valve, DN200 PN16",
+      "discipline": "Plumbing",
+      "zone_id": "ZONE-D",
+      "approved_rev": "C",
+      "approved_date": "2026-06-01",
+      "doc_ref": "SUB-0030-VLV-22-RC.pdf"
+    },
+    {
+      "id": "SUB-0031",
+      "sku": "PMP-31",
+      "description": "End-Suction Pump, 30 kW",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-D",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0031-PMP-31-RD.pdf"
+    },
+    {
+      "id": "SUB-0032",
+      "sku": "FCU-17",
+      "description": "Fan Coil Unit, ceiling concealed",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-D",
+      "approved_rev": "C",
+      "approved_date": "2026-06-01",
+      "doc_ref": "SUB-0032-FCU-17-RC.pdf"
+    },
+    {
+      "id": "SUB-0033",
+      "sku": "CBL-90",
+      "description": "LV Cable Tray, 300mm perforated",
+      "discipline": "Electrical",
+      "zone_id": "ZONE-D",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0033-CBL-90-RD.pdf"
+    },
+    {
+      "id": "SUB-0035",
+      "sku": "ISO-02",
+      "description": "Vibration Isolator, spring 25mm",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-D",
+      "approved_rev": "D",
+      "approved_date": "2026-06-15",
+      "doc_ref": "SUB-0035-ISO-02-RD.pdf"
+    }
+  ],
+  "units": [
+    {
+      "serial": "SN-4471",
+      "sku": "GT-12",
+      "rev": "B",
+      "manufactured_date": "2026-02-03",
+      "_demo_note": "HERO MISMATCH - installed Rev B, Zone A approves Rev C"
+    },
+    {
+      "serial": "SN-4472",
+      "sku": "GT-12",
+      "rev": "C",
+      "manufactured_date": "2026-02-03",
+      "_demo_note": "HERO MATCH - correct unit, clean green verdict"
+    },
+    {
+      "serial": "SN-4473",
+      "sku": "AHU-04",
+      "rev": "A",
+      "manufactured_date": "2026-02-03",
+      "_demo_note": "SUPERSEDED CHAIN - two revisions behind"
+    },
+    {
+      "serial": "SN-4474",
+      "sku": "PNL-08",
+      "rev": "D",
+      "manufactured_date": "2026-02-03",
+      "_demo_note": "MATCH - second clean scan for B-roll"
+    },
+    {
+      "serial": "SN-4475",
+      "sku": "SPR-14",
+      "rev": "B",
+      "manufactured_date": "2026-02-03",
+      "_demo_note": "NO APPROVED RECORD in Zone D - advisory path"
+    },
+    {
+      "serial": "SN-4480",
+      "sku": "GT-12",
+      "rev": "B",
+      "manufactured_date": "2026-04-06"
+    },
+    {
+      "serial": "SN-4481",
+      "sku": "GT-12",
+      "rev": "A",
+      "manufactured_date": "2025-12-15"
+    },
+    {
+      "serial": "SN-4482",
+      "sku": "GT-12",
+      "rev": "B",
+      "manufactured_date": "2026-02-25"
+    },
+    {
+      "serial": "SN-4483",
+      "sku": "GT-12",
+      "rev": "B",
+      "manufactured_date": "2026-01-26"
+    },
+    {
+      "serial": "SN-4484",
+      "sku": "GT-12",
+      "rev": "B",
+      "manufactured_date": "2025-12-06"
+    },
+    {
+      "serial": "SN-4485",
+      "sku": "GT-12",
+      "rev": "B",
+      "manufactured_date": "2025-12-25"
+    },
+    {
+      "serial": "SN-4486",
+      "sku": "GT-12",
+      "rev": "B",
+      "manufactured_date": "2026-01-05"
+    },
+    {
+      "serial": "SN-4487",
+      "sku": "GT-12",
+      "rev": "B",
+      "manufactured_date": "2025-12-07"
+    },
+    {
+      "serial": "SN-4488",
+      "sku": "GT-12",
+      "rev": "B",
+      "manufactured_date": "2026-03-15"
+    },
+    {
+      "serial": "SN-4489",
+      "sku": "GT-12",
+      "rev": "B",
+      "manufactured_date": "2026-02-28"
+    },
+    {
+      "serial": "SN-4490",
+      "sku": "GT-12",
+      "rev": "A",
+      "manufactured_date": "2026-02-08"
+    },
+    {
+      "serial": "SN-4491",
+      "sku": "GT-12",
+      "rev": "B",
+      "manufactured_date": "2026-02-27"
+    },
+    {
+      "serial": "SN-4492",
+      "sku": "GT-12",
+      "rev": "B",
+      "manufactured_date": "2026-03-23"
+    },
+    {
+      "serial": "SN-4493",
+      "sku": "GT-12",
+      "rev": "B",
+      "manufactured_date": "2025-11-05"
+    },
+    {
+      "serial": "SN-4494",
+      "sku": "AHU-04",
+      "rev": "D",
+      "manufactured_date": "2026-01-16"
+    },
+    {
+      "serial": "SN-4495",
+      "sku": "AHU-04",
+      "rev": "C",
+      "manufactured_date": "2026-01-28"
+    },
+    {
+      "serial": "SN-4496",
+      "sku": "AHU-04",
+      "rev": "D",
+      "manufactured_date": "2025-12-12"
+    },
+    {
+      "serial": "SN-4497",
+      "sku": "AHU-04",
+      "rev": "D",
+      "manufactured_date": "2026-01-18"
+    },
+    {
+      "serial": "SN-4498",
+      "sku": "AHU-04",
+      "rev": "D",
+      "manufactured_date": "2026-02-28"
+    },
+    {
+      "serial": "SN-4499",
+      "sku": "AHU-04",
+      "rev": "D",
+      "manufactured_date": "2026-03-31"
+    },
+    {
+      "serial": "SN-4500",
+      "sku": "AHU-04",
+      "rev": "D",
+      "manufactured_date": "2026-03-21"
+    },
+    {
+      "serial": "SN-4501",
+      "sku": "AHU-04",
+      "rev": "D",
+      "manufactured_date": "2026-03-18"
+    },
+    {
+      "serial": "SN-4502",
+      "sku": "AHU-04",
+      "rev": "D",
+      "manufactured_date": "2026-03-09"
+    },
+    {
+      "serial": "SN-4503",
+      "sku": "AHU-04",
+      "rev": "D",
+      "manufactured_date": "2026-02-13"
+    },
+    {
+      "serial": "SN-4504",
+      "sku": "AHU-04",
+      "rev": "D",
+      "manufactured_date": "2026-03-05"
+    },
+    {
+      "serial": "SN-4505",
+      "sku": "AHU-04",
+      "rev": "D",
+      "manufactured_date": "2025-11-26"
+    },
+    {
+      "serial": "SN-4506",
+      "sku": "VLV-22",
+      "rev": "C",
+      "manufactured_date": "2026-03-26"
+    },
+    {
+      "serial": "SN-4507",
+      "sku": "VLV-22",
+      "rev": "C",
+      "manufactured_date": "2025-12-15"
+    },
+    {
+      "serial": "SN-4508",
+      "sku": "VLV-22",
+      "rev": "C",
+      "manufactured_date": "2026-02-06"
+    },
+    {
+      "serial": "SN-4509",
+      "sku": "VLV-22",
+      "rev": "C",
+      "manufactured_date": "2026-03-17"
+    },
+    {
+      "serial": "SN-4510",
+      "sku": "VLV-22",
+      "rev": "C",
+      "manufactured_date": "2026-03-19"
+    },
+    {
+      "serial": "SN-4511",
+      "sku": "VLV-22",
+      "rev": "C",
+      "manufactured_date": "2026-03-08"
+    },
+    {
+      "serial": "SN-4512",
+      "sku": "VLV-22",
+      "rev": "C",
+      "manufactured_date": "2025-11-19"
+    },
+    {
+      "serial": "SN-4513",
+      "sku": "VLV-22",
+      "rev": "B",
+      "manufactured_date": "2025-12-05"
+    },
+    {
+      "serial": "SN-4514",
+      "sku": "VLV-22",
+      "rev": "C",
+      "manufactured_date": "2026-01-07"
+    },
+    {
+      "serial": "SN-4515",
+      "sku": "VLV-22",
+      "rev": "C",
+      "manufactured_date": "2025-11-24"
+    },
+    {
+      "serial": "SN-4516",
+      "sku": "PNL-08",
+      "rev": "C",
+      "manufactured_date": "2026-01-02"
+    },
+    {
+      "serial": "SN-4517",
+      "sku": "PNL-08",
+      "rev": "C",
+      "manufactured_date": "2026-01-20"
+    },
+    {
+      "serial": "SN-4518",
+      "sku": "PNL-08",
+      "rev": "D",
+      "manufactured_date": "2025-11-05"
+    },
+    {
+      "serial": "SN-4519",
+      "sku": "PNL-08",
+      "rev": "D",
+      "manufactured_date": "2026-02-11"
+    },
+    {
+      "serial": "SN-4520",
+      "sku": "PNL-08",
+      "rev": "D",
+      "manufactured_date": "2025-11-12"
+    },
+    {
+      "serial": "SN-4521",
+      "sku": "PNL-08",
+      "rev": "D",
+      "manufactured_date": "2025-12-29"
+    },
+    {
+      "serial": "SN-4522",
+      "sku": "PNL-08",
+      "rev": "D",
+      "manufactured_date": "2025-11-13"
+    },
+    {
+      "serial": "SN-4523",
+      "sku": "PNL-08",
+      "rev": "D",
+      "manufactured_date": "2026-01-17"
+    },
+    {
+      "serial": "SN-4524",
+      "sku": "PNL-08",
+      "rev": "D",
+      "manufactured_date": "2026-04-06"
+    },
+    {
+      "serial": "SN-4525",
+      "sku": "PNL-08",
+      "rev": "B",
+      "manufactured_date": "2026-02-06"
+    },
+    {
+      "serial": "SN-4526",
+      "sku": "PMP-31",
+      "rev": "D",
+      "manufactured_date": "2025-12-31"
+    },
+    {
+      "serial": "SN-4527",
+      "sku": "PMP-31",
+      "rev": "D",
+      "manufactured_date": "2026-01-01"
+    },
+    {
+      "serial": "SN-4528",
+      "sku": "PMP-31",
+      "rev": "D",
+      "manufactured_date": "2026-01-24"
+    },
+    {
+      "serial": "SN-4529",
+      "sku": "PMP-31",
+      "rev": "B",
+      "manufactured_date": "2026-02-05"
+    },
+    {
+      "serial": "SN-4530",
+      "sku": "PMP-31",
+      "rev": "D",
+      "manufactured_date": "2026-03-29"
+    },
+    {
+      "serial": "SN-4531",
+      "sku": "PMP-31",
+      "rev": "A",
+      "manufactured_date": "2026-03-28"
+    },
+    {
+      "serial": "SN-4532",
+      "sku": "PMP-31",
+      "rev": "D",
+      "manufactured_date": "2025-12-08"
+    },
+    {
+      "serial": "SN-4533",
+      "sku": "PMP-31",
+      "rev": "C",
+      "manufactured_date": "2026-04-10"
+    },
+    {
+      "serial": "SN-4534",
+      "sku": "PMP-31",
+      "rev": "C",
+      "manufactured_date": "2026-01-06"
+    },
+    {
+      "serial": "SN-4535",
+      "sku": "PMP-31",
+      "rev": "D",
+      "manufactured_date": "2026-01-05"
+    },
+    {
+      "serial": "SN-4536",
+      "sku": "FCU-17",
+      "rev": "C",
+      "manufactured_date": "2026-01-13"
+    },
+    {
+      "serial": "SN-4537",
+      "sku": "FCU-17",
+      "rev": "A",
+      "manufactured_date": "2026-01-10"
+    },
+    {
+      "serial": "SN-4538",
+      "sku": "FCU-17",
+      "rev": "B",
+      "manufactured_date": "2026-02-27"
+    },
+    {
+      "serial": "SN-4539",
+      "sku": "FCU-17",
+      "rev": "A",
+      "manufactured_date": "2025-11-09"
+    },
+    {
+      "serial": "SN-4540",
+      "sku": "FCU-17",
+      "rev": "A",
+      "manufactured_date": "2025-11-25"
+    },
+    {
+      "serial": "SN-4541",
+      "sku": "FCU-17",
+      "rev": "A",
+      "manufactured_date": "2025-12-02"
+    },
+    {
+      "serial": "SN-4542",
+      "sku": "FCU-17",
+      "rev": "C",
+      "manufactured_date": "2026-03-17"
+    },
+    {
+      "serial": "SN-4543",
+      "sku": "FCU-17",
+      "rev": "C",
+      "manufactured_date": "2026-02-06"
+    },
+    {
+      "serial": "SN-4544",
+      "sku": "FCU-17",
+      "rev": "C",
+      "manufactured_date": "2026-01-19"
+    },
+    {
+      "serial": "SN-4545",
+      "sku": "FCU-17",
+      "rev": "C",
+      "manufactured_date": "2026-03-01"
+    },
+    {
+      "serial": "SN-4546",
+      "sku": "DMP-05",
+      "rev": "B",
+      "manufactured_date": "2025-12-01"
+    },
+    {
+      "serial": "SN-4547",
+      "sku": "DMP-05",
+      "rev": "A",
+      "manufactured_date": "2026-03-07"
+    },
+    {
+      "serial": "SN-4548",
+      "sku": "DMP-05",
+      "rev": "B",
+      "manufactured_date": "2026-01-21"
+    },
+    {
+      "serial": "SN-4549",
+      "sku": "DMP-05",
+      "rev": "B",
+      "manufactured_date": "2026-03-07"
+    },
+    {
+      "serial": "SN-4550",
+      "sku": "DMP-05",
+      "rev": "B",
+      "manufactured_date": "2026-01-06"
+    },
+    {
+      "serial": "SN-4551",
+      "sku": "DMP-05",
+      "rev": "B",
+      "manufactured_date": "2026-01-04"
+    },
+    {
+      "serial": "SN-4552",
+      "sku": "DMP-05",
+      "rev": "A",
+      "manufactured_date": "2026-02-20"
+    },
+    {
+      "serial": "SN-4553",
+      "sku": "DMP-05",
+      "rev": "B",
+      "manufactured_date": "2025-12-08"
+    },
+    {
+      "serial": "SN-4554",
+      "sku": "DMP-05",
+      "rev": "A",
+      "manufactured_date": "2026-04-11"
+    },
+    {
+      "serial": "SN-4555",
+      "sku": "DMP-05",
+      "rev": "B",
+      "manufactured_date": "2025-11-13"
+    },
+    {
+      "serial": "SN-4556",
+      "sku": "DMP-05",
+      "rev": "B",
+      "manufactured_date": "2025-12-25"
+    },
+    {
+      "serial": "SN-4557",
+      "sku": "DMP-05",
+      "rev": "B",
+      "manufactured_date": "2025-11-11"
+    },
+    {
+      "serial": "SN-4558",
+      "sku": "CBL-90",
+      "rev": "D",
+      "manufactured_date": "2025-12-18"
+    },
+    {
+      "serial": "SN-4559",
+      "sku": "CBL-90",
+      "rev": "D",
+      "manufactured_date": "2026-03-29"
+    },
+    {
+      "serial": "SN-4560",
+      "sku": "CBL-90",
+      "rev": "C",
+      "manufactured_date": "2026-03-07"
+    },
+    {
+      "serial": "SN-4561",
+      "sku": "CBL-90",
+      "rev": "D",
+      "manufactured_date": "2026-02-05"
+    },
+    {
+      "serial": "SN-4562",
+      "sku": "CBL-90",
+      "rev": "D",
+      "manufactured_date": "2025-12-10"
+    },
+    {
+      "serial": "SN-4563",
+      "sku": "CBL-90",
+      "rev": "D",
+      "manufactured_date": "2026-02-19"
+    },
+    {
+      "serial": "SN-4564",
+      "sku": "CBL-90",
+      "rev": "D",
+      "manufactured_date": "2026-01-13"
+    },
+    {
+      "serial": "SN-4565",
+      "sku": "CBL-90",
+      "rev": "A",
+      "manufactured_date": "2026-01-25"
+    },
+    {
+      "serial": "SN-4566",
+      "sku": "CBL-90",
+      "rev": "D",
+      "manufactured_date": "2026-03-29"
+    },
+    {
+      "serial": "SN-4567",
+      "sku": "CBL-90",
+      "rev": "D",
+      "manufactured_date": "2026-01-28"
+    },
+    {
+      "serial": "SN-4568",
+      "sku": "CBL-90",
+      "rev": "C",
+      "manufactured_date": "2026-02-21"
+    },
+    {
+      "serial": "SN-4569",
+      "sku": "CBL-90",
+      "rev": "D",
+      "manufactured_date": "2026-02-21"
+    },
+    {
+      "serial": "SN-4570",
+      "sku": "SPR-14",
+      "rev": "B",
+      "manufactured_date": "2025-12-28"
+    },
+    {
+      "serial": "SN-4571",
+      "sku": "SPR-14",
+      "rev": "B",
+      "manufactured_date": "2026-02-22"
+    },
+    {
+      "serial": "SN-4572",
+      "sku": "SPR-14",
+      "rev": "B",
+      "manufactured_date": "2025-11-23"
+    },
+    {
+      "serial": "SN-4573",
+      "sku": "SPR-14",
+      "rev": "B",
+      "manufactured_date": "2026-03-20"
+    },
+    {
+      "serial": "SN-4574",
+      "sku": "SPR-14",
+      "rev": "B",
+      "manufactured_date": "2026-01-30"
+    },
+    {
+      "serial": "SN-4575",
+      "sku": "SPR-14",
+      "rev": "B",
+      "manufactured_date": "2026-02-24"
+    },
+    {
+      "serial": "SN-4576",
+      "sku": "SPR-14",
+      "rev": "B",
+      "manufactured_date": "2025-12-19"
+    },
+    {
+      "serial": "SN-4577",
+      "sku": "SPR-14",
+      "rev": "B",
+      "manufactured_date": "2026-01-13"
+    },
+    {
+      "serial": "SN-4578",
+      "sku": "SPR-14",
+      "rev": "B",
+      "manufactured_date": "2026-02-12"
+    },
+    {
+      "serial": "SN-4579",
+      "sku": "SPR-14",
+      "rev": "B",
+      "manufactured_date": "2025-12-12"
+    },
+    {
+      "serial": "SN-4580",
+      "sku": "ISO-02",
+      "rev": "D",
+      "manufactured_date": "2025-11-15"
+    },
+    {
+      "serial": "SN-4581",
+      "sku": "ISO-02",
+      "rev": "D",
+      "manufactured_date": "2025-12-09"
+    },
+    {
+      "serial": "SN-4582",
+      "sku": "ISO-02",
+      "rev": "A",
+      "manufactured_date": "2025-11-27"
+    },
+    {
+      "serial": "SN-4583",
+      "sku": "ISO-02",
+      "rev": "A",
+      "manufactured_date": "2026-03-18"
+    },
+    {
+      "serial": "SN-4584",
+      "sku": "ISO-02",
+      "rev": "A",
+      "manufactured_date": "2026-02-10"
+    },
+    {
+      "serial": "SN-4585",
+      "sku": "ISO-02",
+      "rev": "D",
+      "manufactured_date": "2026-01-27"
+    },
+    {
+      "serial": "SN-4586",
+      "sku": "ISO-02",
+      "rev": "B",
+      "manufactured_date": "2026-03-05"
+    },
+    {
+      "serial": "SN-4587",
+      "sku": "ISO-02",
+      "rev": "A",
+      "manufactured_date": "2026-02-09"
+    },
+    {
+      "serial": "SN-4588",
+      "sku": "ISO-02",
+      "rev": "A",
+      "manufactured_date": "2025-11-06"
+    },
+    {
+      "serial": "SN-4589",
+      "sku": "ISO-02",
+      "rev": "D",
+      "manufactured_date": "2025-12-24"
+    },
+    {
+      "serial": "SN-4590",
+      "sku": "ISO-02",
+      "rev": "B",
+      "manufactured_date": "2025-12-13"
+    },
+    {
+      "serial": "SN-4591",
+      "sku": "ISO-02",
+      "rev": "D",
+      "manufactured_date": "2026-04-02"
+    },
+    {
+      "serial": "SN-4592",
+      "sku": "ISO-02",
+      "rev": "D",
+      "manufactured_date": "2025-12-15"
+    },
+    {
+      "serial": "SN-4593",
+      "sku": "ISO-02",
+      "rev": "D",
+      "manufactured_date": "2026-03-09"
+    }
+  ],
+  "installs": [
+    {
+      "id": "INS-ZONE-A-SN-4472",
+      "serial": "SN-4472",
+      "sku": "GT-12",
+      "zone_id": "ZONE-A",
+      "installed_at": "2026-07-10",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-A-SN-4536",
+      "serial": "SN-4536",
+      "sku": "FCU-17",
+      "zone_id": "ZONE-A",
+      "installed_at": "2026-08-04",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-A-SN-4568",
+      "serial": "SN-4568",
+      "sku": "CBL-90",
+      "zone_id": "ZONE-A",
+      "installed_at": "2026-07-31",
+      "verified_by": "P. Singh",
+      "status": "FLAGGED"
+    },
+    {
+      "id": "INS-ZONE-A-SN-4491",
+      "serial": "SN-4491",
+      "sku": "GT-12",
+      "zone_id": "ZONE-A",
+      "installed_at": "2026-07-13",
+      "verified_by": "P. Singh",
+      "status": "FLAGGED"
+    },
+    {
+      "id": "INS-ZONE-A-SN-4528",
+      "serial": "SN-4528",
+      "sku": "PMP-31",
+      "zone_id": "ZONE-A",
+      "installed_at": "2026-07-09",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-A-SN-4571",
+      "serial": "SN-4571",
+      "sku": "SPR-14",
+      "zone_id": "ZONE-A",
+      "installed_at": "2026-07-10",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-A-SN-4526",
+      "serial": "SN-4526",
+      "sku": "PMP-31",
+      "zone_id": "ZONE-A",
+      "installed_at": "2026-07-11",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-B-SN-4499",
+      "serial": "SN-4499",
+      "sku": "AHU-04",
+      "zone_id": "ZONE-B",
+      "installed_at": "2026-07-10",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-B-SN-4524",
+      "serial": "SN-4524",
+      "sku": "PNL-08",
+      "zone_id": "ZONE-B",
+      "installed_at": "2026-07-29",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-B-SN-4485",
+      "serial": "SN-4485",
+      "sku": "GT-12",
+      "zone_id": "ZONE-B",
+      "installed_at": "2026-07-22",
+      "verified_by": "A. Kumar",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "INS-ZONE-B-SN-4580",
+      "serial": "SN-4580",
+      "sku": "ISO-02",
+      "zone_id": "ZONE-B",
+      "installed_at": "2026-08-03",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-B-SN-4561",
+      "serial": "SN-4561",
+      "sku": "CBL-90",
+      "zone_id": "ZONE-B",
+      "installed_at": "2026-07-12",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-B-SN-4548",
+      "serial": "SN-4548",
+      "sku": "DMP-05",
+      "zone_id": "ZONE-B",
+      "installed_at": "2026-07-25",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-C-SN-4564",
+      "serial": "SN-4564",
+      "sku": "CBL-90",
+      "zone_id": "ZONE-C",
+      "installed_at": "2026-07-23",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-C-SN-4492",
+      "serial": "SN-4492",
+      "sku": "GT-12",
+      "zone_id": "ZONE-C",
+      "installed_at": "2026-07-27",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-C-SN-4583",
+      "serial": "SN-4583",
+      "sku": "ISO-02",
+      "zone_id": "ZONE-C",
+      "installed_at": "2026-07-25",
+      "verified_by": "P. Singh",
+      "status": "FLAGGED"
+    },
+    {
+      "id": "INS-ZONE-C-SN-4543",
+      "serial": "SN-4543",
+      "sku": "FCU-17",
+      "zone_id": "ZONE-C",
+      "installed_at": "2026-07-24",
+      "verified_by": "P. Singh",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "INS-ZONE-C-SN-4524",
+      "serial": "SN-4524",
+      "sku": "PNL-08",
+      "zone_id": "ZONE-C",
+      "installed_at": "2026-07-06",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-C-SN-4572",
+      "serial": "SN-4572",
+      "sku": "SPR-14",
+      "zone_id": "ZONE-C",
+      "installed_at": "2026-07-12",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-D-SN-4536",
+      "serial": "SN-4536",
+      "sku": "FCU-17",
+      "zone_id": "ZONE-D",
+      "installed_at": "2026-07-17",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-D-SN-4473",
+      "serial": "SN-4473",
+      "sku": "AHU-04",
+      "zone_id": "ZONE-D",
+      "installed_at": "2026-07-25",
+      "verified_by": "P. Singh",
+      "status": "FLAGGED"
+    },
+    {
+      "id": "INS-ZONE-D-SN-4484",
+      "serial": "SN-4484",
+      "sku": "GT-12",
+      "zone_id": "ZONE-D",
+      "installed_at": "2026-07-11",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-D-SN-4488",
+      "serial": "SN-4488",
+      "sku": "GT-12",
+      "zone_id": "ZONE-D",
+      "installed_at": "2026-08-01",
+      "verified_by": "A. Kumar",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "INS-ZONE-D-SN-4587",
+      "serial": "SN-4587",
+      "sku": "ISO-02",
+      "zone_id": "ZONE-D",
+      "installed_at": "2026-07-29",
+      "verified_by": "P. Singh",
+      "status": "FLAGGED"
+    },
+    {
+      "id": "INS-ZONE-D-SN-4569",
+      "serial": "SN-4569",
+      "sku": "CBL-90",
+      "zone_id": "ZONE-D",
+      "installed_at": "2026-07-09",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-D-SN-4589",
+      "serial": "SN-4589",
+      "sku": "ISO-02",
+      "zone_id": "ZONE-D",
+      "installed_at": "2026-07-30",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-D-SN-4513",
+      "serial": "SN-4513",
+      "sku": "VLV-22",
+      "zone_id": "ZONE-D",
+      "installed_at": "2026-07-21",
+      "verified_by": "P. Singh",
+      "status": "FLAGGED"
+    },
+    {
+      "id": "INS-ZONE-D-SN-4508",
+      "serial": "SN-4508",
+      "sku": "VLV-22",
+      "zone_id": "ZONE-D",
+      "installed_at": "2026-07-24",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-D-SN-4509",
+      "serial": "SN-4509",
+      "sku": "VLV-22",
+      "zone_id": "ZONE-D",
+      "installed_at": "2026-07-28",
+      "verified_by": "A. Kumar",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "INS-ZONE-A-SN-4471",
+      "serial": "SN-4471",
+      "sku": "GT-12",
+      "zone_id": "ZONE-A",
+      "installed_at": "2026-07-31",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-A-SN-4474",
+      "serial": "SN-4474",
+      "sku": "PNL-08",
+      "zone_id": "ZONE-A",
+      "installed_at": "2026-07-31",
+      "verified_by": null,
+      "status": "PENDING"
+    },
+    {
+      "id": "INS-ZONE-C-SN-4473",
+      "serial": "SN-4473",
+      "sku": "AHU-04",
+      "zone_id": "ZONE-C",
+      "installed_at": "2026-07-31",
+      "verified_by": null,
+      "status": "PENDING"
+    }
+  ],
+  "ncrs": [
+    {
+      "id": "NCR-0028",
+      "serial": "SN-4402",
+      "sku": "GT-12",
+      "zone_id": "ZONE-A",
+      "installed_rev": "B",
+      "approved_rev": "C",
+      "created_at": "2026-07-06",
+      "confirmed_by": "M. Nair",
+      "narrative": "Rev B unit installed at grid E4; Rev C approved 31 Jul. Torn out.",
+      "status": "CLOSED"
+    },
+    {
+      "id": "NCR-0029",
+      "serial": "SN-4418",
+      "sku": "GT-12",
+      "zone_id": "ZONE-A",
+      "installed_rev": "B",
+      "approved_rev": "C",
+      "created_at": "2026-07-19",
+      "confirmed_by": "A. Kumar",
+      "narrative": "Rev B pulled from the same pallet. Caught at inspection.",
+      "status": "CLOSED"
+    },
+    {
+      "id": "NCR-0030",
+      "serial": "SN-4455",
+      "sku": "GT-12",
+      "zone_id": "ZONE-A",
+      "installed_rev": "B",
+      "approved_rev": "C",
+      "created_at": "2026-08-01",
+      "confirmed_by": "P. Singh",
+      "narrative": "Rev B again - pallet never quarantined after NCR-0028.",
+      "status": "OPEN"
+    },
+    {
+      "id": "NCR-0031",
+      "serial": "SN-4501",
+      "sku": "VLV-22",
+      "zone_id": "ZONE-B",
+      "installed_rev": "A",
+      "approved_rev": "B",
+      "created_at": "2026-07-22",
+      "confirmed_by": "M. Nair",
+      "narrative": "Wrong pressure class delivered.",
+      "status": "CLOSED"
+    },
+    {
+      "id": "NCR-0032",
+      "serial": "SN-4533",
+      "sku": "AHU-04",
+      "zone_id": "ZONE-C",
+      "installed_rev": "B",
+      "approved_rev": "C",
+      "created_at": "2026-08-03",
+      "confirmed_by": null,
+      "narrative": "Coil spec superseded.",
+      "status": "OPEN"
+    }
+  ],
+  "demo_tags": [
+    {
+      "serial": "SN-4471",
+      "sku": "GT-12",
+      "rev": "B",
+      "note": "HERO MISMATCH - installed Rev B, Zone A approves Rev C"
+    },
+    {
+      "serial": "SN-4472",
+      "sku": "GT-12",
+      "rev": "C",
+      "note": "HERO MATCH - correct unit, clean green verdict"
+    },
+    {
+      "serial": "SN-4473",
+      "sku": "AHU-04",
+      "rev": "A",
+      "note": "SUPERSEDED CHAIN - two revisions behind"
+    },
+    {
+      "serial": "SN-4474",
+      "sku": "PNL-08",
+      "rev": "D",
+      "note": "MATCH - second clean scan for B-roll"
+    },
+    {
+      "serial": "SN-9999",
+      "sku": "VLV-22",
+      "rev": "C",
+      "note": "UNKNOWN UNIT - not in record, graceful-failure shot"
+    },
+    {
+      "serial": "SN-4475",
+      "sku": "SPR-14",
+      "rev": "B",
+      "note": "NO APPROVED RECORD in Zone D - advisory path"
+    }
+  ]
+}
