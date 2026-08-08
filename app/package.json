@@ -16,6 +16,7 @@
   },
   "//test": "Node 22 runs TypeScript natively. The engine suite has ZERO dependencies - it runs on a laptop with nothing installed but Node. Deliberate: the safety-critical code must never be blocked by a broken toolchain.",
   "dependencies": {
+    "babel-preset-expo": "~54.0.10",
     "expo": "^54.0.0",
     "expo-asset": "~12.0.13",
     "expo-camera": "~17.0.10",

@@ -310,6 +310,49 @@ async function probe(url, ms = 1200) {
   catch { return false; } finally { clearTimeout(t); }
 }
 
+/**
+ * Kill whatever is listening on a port.
+ *
+ * Closing the panel's console window does not always deliver SIGINT on Windows,
+ * so a Metro process can survive and hold 8081. The next start then asks
+ * "Use port 8082 instead?" — a prompt non-interactive mode cannot answer, so it
+ * just dies. Freeing the port is the fix; changing the port only moves it.
+ */
+function portPids(port) {
+  return new Promise(done => {
+    const cmd = isWin
+      ? `netstat -ano | findstr :${port} | findstr LISTENING`
+      : `lsof -ti tcp:${port} -sTCP:LISTEN`;
+    let out = '';
+    const c = spawn(cmd, { shell: true, windowsHide: true });
+    c.stdout.on('data', d => out += d);
+    c.on('error', () => done([]));
+    c.on('close', () => {
+      const pids = new Set();
+      for (const line of out.split(/\r?\n/)) {
+        const t = line.trim();
+        if (!t) continue;
+        // netstat: last column is the PID. lsof -t: the whole line is the PID.
+        const pid = isWin ? t.split(/\s+/).pop() : t;
+        if (/^\d+$/.test(pid) && pid !== '0') pids.add(pid);
+      }
+      done([...pids]);
+    });
+    setTimeout(() => { try { c.kill(); } catch {} done([]); }, 5000);
+  });
+}
+
+async function freePort(port) {
+  const pids = await portPids(port);
+  for (const pid of pids) {
+    try {
+      if (isWin) spawn('taskkill', ['/PID', pid, '/T', '/F'], { windowsHide: true });
+      else process.kill(Number(pid), 'SIGKILL');
+    } catch { /* already gone */ }
+  }
+  return pids;
+}
+
 /** Does this command exist and run? Used by the self-test. */
 function which(cmd, args = ['--version']) {
   return new Promise(done => {
@@ -377,8 +420,8 @@ const ACTIONS = {
   }),
   doctor: () => launch('doctor', 'npx', ['expo', 'install', '--fix'], { cwd: APP }),
   server: () => launch('server', process.execPath, [join(ROOT, 'server', 'index.mjs')]),
-  expo: () => launch('expo', 'npx', ['expo', 'start'], { cwd: APP }),
-  expoTunnel: () => launch('expo', 'npx', ['expo', 'start', '--tunnel'], { cwd: APP }),
+  expo: () => launch('expo', 'npx', ['expo', 'start', '--port', '8081'], { cwd: APP }),
+  expoTunnel: () => launch('expo', 'npx', ['expo', 'start', '--tunnel', '--port', '8081'], { cwd: APP }),
   // APK builds. Both run on THIS machine - the cloud one uploads the source to
   // Expo's builders, the local one needs Android Studio + JDK 17 installed.
   easWhoami: () => launch('build', 'npx', ['--yes', 'eas-cli', 'whoami'],
@@ -453,8 +496,10 @@ createServer(async (req, res) => {
     if (url.pathname === '/api/state') {
       const env = readEnv();
       const serverUp = await probe('http://localhost:8787/health');
+      const metroBusy = (await portPids(8081)).length > 0 && !entry('expo').child;
       return json(res, 200, {
         root: ROOT,
+        metroBusy,
         node: process.versions.node,
         nodeOk: Number(process.versions.node.split('.')[0]) >= 22,
         installed: existsSync(join(APP, 'node_modules')),
@@ -569,6 +614,12 @@ createServer(async (req, res) => {
       const fn = ACTIONS[action];
       if (!fn) return json(res, 400, { ok: false, error: `unknown action ${action}` });
       return json(res, 200, fn());
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/free-ports') {
+      const freed = {};
+      for (const port of [8081, 8082, 8787]) freed[port] = await freePort(port);
+      return json(res, 200, { ok: true, freed });
     }
 
     if (req.method === 'POST' && url.pathname === '/api/stop') {

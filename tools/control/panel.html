@@ -129,6 +129,13 @@
       <div class="row" style="margin-top:9px">
         <button class="ghost" onclick="run('expoTunnel')">Start in tunnel mode (if wifi won't connect)</button>
       </div>
+      <div id="portwarn" style="display:none;margin-top:10px;background:#3A2606;color:#FFE1AE;
+           border-radius:10px;padding:11px 13px;font-size:12.5px;line-height:1.5">
+        <b>Port 8081 is already in use.</b> A Metro process from an earlier run is still
+        alive — closing the window does not always stop it. Expo then asks
+        "use port 8082 instead?", which it cannot answer on its own, so it quits.
+        <button class="ghost" style="margin-top:9px" onclick="freePorts()">Free the ports and try again</button>
+      </div>
       <div id="qrbox" style="display:none;margin-top:16px" class="qr">
         <img id="qrimg" alt="Expo QR code" />
         <div>
@@ -422,6 +429,14 @@ function copyUrl(){
   navigator.clipboard.writeText($('expurl').textContent).then(()=>flash('URL copied.'));
 }
 
+async function freePorts(){
+  const r = await api('/api/free-ports', {});
+  const n = Object.values(r.freed || {}).flat().length;
+  alertMsg(n ? `Stopped ${n} stale process${n>1?'es':''}. Press <b>Start app</b> again.`
+             : 'Nothing was holding those ports. Try <b>Start app</b> again.', 'good');
+  $('portwarn').style.display = 'none';
+}
+
 async function relocate(){
   $('pathmsg').innerHTML = 'Copying…';
   const r = await api('/api/relocate', {});
@@ -464,6 +479,8 @@ async function buildCheck(){
   $('buildchk').innerHTML = d.checks.map(c =>
     `<div class="${c.ok?'y':'n'}"><i>${c.ok?'✓':'✗'}</i><span>${c.name}</span><small>${
       String(c.detail).replace(/[&<>]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[x]))}</small></div>`).join('');
+  const pw = $('portwarn');
+  if(pw) pw.style.display = s.metroBusy ? '' : 'none';
   if(s.path){
     $('pathcard').style.display = s.path.tooDeep ? '' : 'none';
     $('pathlen').textContent = s.path.length;
