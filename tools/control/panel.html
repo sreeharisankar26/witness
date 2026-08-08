@@ -167,6 +167,7 @@
           <button onclick="run('install')">Install dependencies</button>
           <button onclick="run('doctor')">Fix package versions</button>
         </div>
+        <button class="ghost" onclick="run('fixBabel').then(()=>setTimeout(buildCheck,8000))">Fix Babel preset (needed for APK builds)</button>
       </div>
       <pre id="log-test"></pre>
       <button class="ghost" style="margin-top:9px" onclick="copyLog('log-test')">Copy log</button>

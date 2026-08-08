@@ -219,6 +219,23 @@ function pathRisk() {
 }
 
 /** Is ROOT inside a git repository? EAS uploads via git and refuses without one. */
+/** What address will a cloud build bake in? */
+/** Is every preset babel.config.js references actually declared? */
+function babelPresetDeclared() {
+  try {
+    const pkg = JSON.parse(readFileSync(join(APP, 'package.json'), 'utf8'));
+    const all = { ...pkg.dependencies, ...pkg.devDependencies };
+    return Boolean(all['babel-preset-expo']);
+  } catch { return false; }
+}
+
+function easServerUrl() {
+  try {
+    const eas = JSON.parse(readFileSync(join(APP, 'eas.json'), 'utf8'));
+    return eas.build?.preview?.env?.EXPO_PUBLIC_SERVER_URL || '';
+  } catch { return ''; }
+}
+
 function hasGitRepo() {
   return existsSync(join(ROOT, '.git'));
 }
@@ -246,8 +263,32 @@ function readEnv() {
   return o;
 }
 
+/**
+ * EAS builds from the git repo, and .env is deliberately not committed — so a
+ * cloud build would never see it and the APK would fall back to localhost,
+ * which on a phone means the phone. The address must also live in eas.json,
+ * which IS committed. A LAN address is not a secret; an API key is, and stays
+ * out of here.
+ */
+function syncEasEnv(serverUrl) {
+  const easPath = join(APP, 'eas.json');
+  if (!existsSync(easPath) || !serverUrl) return;
+  try {
+    const eas = JSON.parse(readFileSync(easPath, 'utf8'));
+    for (const profile of ['preview', 'development']) {
+      if (!eas.build?.[profile]) continue;
+      eas.build[profile].env = {
+        ...(eas.build[profile].env || {}),
+        EXPO_PUBLIC_SERVER_URL: serverUrl,
+      };
+    }
+    writeFileSync(easPath, JSON.stringify(eas, null, 2) + '\n');
+  } catch { /* eas.json is optional */ }
+}
+
 function writeEnv(patch) {
   const cur = { ...readEnv(), ...patch };
+  syncEasEnv(cur.EXPO_PUBLIC_SERVER_URL);
   writeFileSync(ENV_PATH, `# Written by the Witness Control Panel.
 # Restart the app after changing this — values are baked in at bundle time.
 
@@ -326,6 +367,14 @@ const ACTIONS = {
     join('src', 'data', 'sync.test.ts'),
   ], { cwd: APP }),
   install: () => launch('install', 'npm', ['install'], { cwd: APP }),
+  // babel.config.js needs babel-preset-expo declared explicitly. It resolves
+  // locally by hoisting, but a clean CI install puts it somewhere Babel cannot
+  // see - the build fails with "Cannot find module 'babel-preset-expo'".
+  // `expo install` picks the version matching the installed SDK.
+  fixBabel: () => launch('install', '', [], {
+    cwd: APP,
+    raw: 'npx --yes expo install babel-preset-expo && npm install',
+  }),
   doctor: () => launch('doctor', 'npx', ['expo', 'install', '--fix'], { cwd: APP }),
   server: () => launch('server', process.execPath, [join(ROOT, 'server', 'index.mjs')]),
   expo: () => launch('expo', 'npx', ['expo', 'start'], { cwd: APP }),
@@ -462,6 +511,12 @@ createServer(async (req, res) => {
         apkPath: apk,
         apkSize: existsSync(apk) ? Math.round(statSync(apk).size / 1048576) : 0,
         checks: [
+          { name: 'babel-preset-expo declared', ok: babelPresetDeclared(),
+            detail: babelPresetDeclared()
+              ? 'in package.json'
+              : 'MISSING — babel.config.js needs it. Press "Fix Babel preset".' },
+          { name: 'Build will know the server address', ok: Boolean(easServerUrl()),
+            detail: easServerUrl() || 'press Save settings — .env is not committed, so the address must be in eas.json' },
           { name: 'Path short enough for Windows', ok: !pathRisk().tooDeep,
             detail: pathRisk().tooDeep
               ? `${ROOT.length} chars — over the 260 limit once files are added. Move the project.`

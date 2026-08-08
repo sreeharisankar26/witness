@@ -141,6 +141,9 @@ nothing to drop mid-take.
 | `EAS requires you to use a git repository` | Press **Set up git** first. |
 | `Input is required, but stdin is not readable` | A prompt appeared that non-interactive mode cannot answer. The three known ones — create project, git init, keystore — are all handled. Anything else: send the log. |
 | Build asks a question and stops | `--non-interactive` cannot answer prompts. The two normal prompts (create project, generate keystore) are handled. Anything else: send the log. |
+| `Cannot find module 'babel-preset-expo'` | It is used by `babel.config.js` but was not declared in `package.json`. Works locally via npm hoisting, fails on a clean CI install. Press **Fix Babel preset**, commit, rebuild. |
+| `Bundle JavaScript` phase failed | Metro could not build the bundle. **Open the build page on expo.dev and expand the "Bundle JavaScript" phase** — the real error is there, this summary never shows it. Most likely: a Node-only import reaching the bundle (fixed by `app/metro.config.js`) or a missing dependency. |
+| APK built, but it points at localhost | `.env` is not committed, so a cloud build cannot see it. The address must be in `eas.json` — press **Save settings**, which now writes both. |
 | Long queue wait | Free tier shares builders. It is normal to wait; the build itself is ~10 min. |
 | APK installs, app opens, but nothing syncs | You built before Step 0. Check the address shown on the phone's sync banner, fix it in the panel, rebuild. |
 | "Build on this PC" fails immediately | Needs **JDK 17+** and Android Studio. Press **Check build tools** — it says which is missing. Use the cloud build instead. |
