@@ -19,6 +19,7 @@ import { readFileSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve as resolvePath, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { networkInterfaces, homedir } from 'node:os';
+import { createServer as createNetServer } from 'node:net';
 import { cpSync, mkdirSync } from 'node:fs';
 import { toSvg } from './qr.mjs';
 
@@ -342,6 +343,32 @@ function portPids(port) {
   });
 }
 
+/** Can we actually bind this port right now? */
+function portFree(port) {
+  return new Promise(done => {
+    const srv = createNetServer();
+    srv.once('error', () => done(false));
+    srv.once('listening', () => srv.close(() => done(true)));
+    srv.listen(port, '0.0.0.0');
+  });
+}
+
+/**
+ * Find a port Metro can have.
+ *
+ * Fighting for 8081 is not worth it. Something can hold it that we cannot
+ * identify or kill — another dev server, an adb reverse, a zombie with no
+ * netstat entry. The panel reads the exp:// URL out of Expo's own output and
+ * builds the QR from that, so ANY port works and the user never sees the
+ * "use 8082 instead?" prompt that non-interactive mode cannot answer.
+ */
+async function pickMetroPort(start = 8081, tries = 25) {
+  for (let p = start; p < start + tries; p++) {
+    if (await portFree(p)) return p;
+  }
+  return start;
+}
+
 async function freePort(port) {
   const pids = await portPids(port);
   for (const pid of pids) {
@@ -420,8 +447,10 @@ const ACTIONS = {
   }),
   doctor: () => launch('doctor', 'npx', ['expo', 'install', '--fix'], { cwd: APP }),
   server: () => launch('server', process.execPath, [join(ROOT, 'server', 'index.mjs')]),
-  expo: () => launch('expo', 'npx', ['expo', 'start', '--port', '8081'], { cwd: APP }),
-  expoTunnel: () => launch('expo', 'npx', ['expo', 'start', '--tunnel', '--port', '8081'], { cwd: APP }),
+  expo: async () => launch('expo', 'npx',
+    ['expo', 'start', '--port', String(await pickMetroPort())], { cwd: APP }),
+  expoTunnel: async () => launch('expo', 'npx',
+    ['expo', 'start', '--tunnel', '--port', String(await pickMetroPort())], { cwd: APP }),
   // APK builds. Both run on THIS machine - the cloud one uploads the source to
   // Expo's builders, the local one needs Android Studio + JDK 17 installed.
   easWhoami: () => launch('build', 'npx', ['--yes', 'eas-cli', 'whoami'],
@@ -496,10 +525,12 @@ createServer(async (req, res) => {
     if (url.pathname === '/api/state') {
       const env = readEnv();
       const serverUp = await probe('http://localhost:8787/health');
-      const metroBusy = (await portPids(8081)).length > 0 && !entry('expo').child;
+      const holders = await portPids(8081);
+      const metroBusy = holders.length > 0 && !entry('expo').child;
       return json(res, 200, {
         root: ROOT,
         metroBusy,
+        port8081Holders: holders,
         node: process.versions.node,
         nodeOk: Number(process.versions.node.split('.')[0]) >= 22,
         installed: existsSync(join(APP, 'node_modules')),
@@ -613,7 +644,7 @@ createServer(async (req, res) => {
       const { action } = await readBody(req);
       const fn = ACTIONS[action];
       if (!fn) return json(res, 400, { ok: false, error: `unknown action ${action}` });
-      return json(res, 200, fn());
+      return json(res, 200, await fn());
     }
 
     if (req.method === 'POST' && url.pathname === '/api/free-ports') {

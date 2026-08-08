@@ -129,12 +129,12 @@
       <div class="row" style="margin-top:9px">
         <button class="ghost" onclick="run('expoTunnel')">Start in tunnel mode (if wifi won't connect)</button>
       </div>
-      <div id="portwarn" style="display:none;margin-top:10px;background:#3A2606;color:#FFE1AE;
+      <div id="portwarn" style="display:none;margin-top:10px;background:#1B2333;color:#BFD3FF;
            border-radius:10px;padding:11px 13px;font-size:12.5px;line-height:1.5">
-        <b>Port 8081 is already in use.</b> A Metro process from an earlier run is still
-        alive — closing the window does not always stop it. Expo then asks
-        "use port 8082 instead?", which it cannot answer on its own, so it quits.
-        <button class="ghost" style="margin-top:9px" onclick="freePorts()">Free the ports and try again</button>
+        <b>Port 8081 is in use</b> <span id="portpids"></span> — that is fine.
+        Metro will take the next free port automatically, and the QR below is built
+        from whatever address it actually reports. Nothing to do.
+        <button class="ghost" style="margin-top:9px" onclick="freePorts()">Free it anyway</button>
       </div>
       <div id="qrbox" style="display:none;margin-top:16px" class="qr">
         <img id="qrimg" alt="Expo QR code" />
@@ -480,7 +480,12 @@ async function buildCheck(){
     `<div class="${c.ok?'y':'n'}"><i>${c.ok?'✓':'✗'}</i><span>${c.name}</span><small>${
       String(c.detail).replace(/[&<>]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[x]))}</small></div>`).join('');
   const pw = $('portwarn');
-  if(pw) pw.style.display = s.metroBusy ? '' : 'none';
+  if(pw){
+    pw.style.display = s.metroBusy ? '' : 'none';
+    const pp = $('portpids');
+    if(pp) pp.textContent = (s.port8081Holders && s.port8081Holders.length)
+      ? '(process ' + s.port8081Holders.join(', ') + ')' : '';
+  }
   if(s.path){
     $('pathcard').style.display = s.path.tooDeep ? '' : 'none';
     $('pathlen').textContent = s.path.length;
