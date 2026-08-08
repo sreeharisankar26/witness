@@ -19,7 +19,7 @@ import { readFileSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve as resolvePath, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { networkInterfaces, homedir } from 'node:os';
-import { createServer as createNetServer } from 'node:net';
+import { createServer as createNetServer, connect as netConnect } from 'node:net';
 import { cpSync, mkdirSync } from 'node:fs';
 import { toSvg } from './qr.mjs';
 
@@ -343,14 +343,35 @@ function portPids(port) {
   });
 }
 
-/** Can we actually bind this port right now? */
-function portFree(port) {
+/**
+ * Is anything listening on this port?
+ *
+ * Tested by CONNECTING, not by binding. Binding to 0.0.0.0 can succeed on
+ * Windows even when another process holds 127.0.0.1 on the same port — so a
+ * bind test reported 8081 as free while Metro immediately found it busy, and we
+ * kept handing Expo a port it could not have. A refused connection is the only
+ * honest answer.
+ */
+function portInUse(host, port, ms = 400) {
   return new Promise(done => {
+    const sock = netConnect({ host, port });
+    const finish = v => { sock.destroy(); done(v); };
+    sock.once('connect', () => finish(true));
+    sock.once('error', () => finish(false));
+    setTimeout(() => finish(false), ms);
+  });
+}
+
+/** Free means: nothing answers on loopback, and we can still bind it. */
+async function portFree(port) {
+  if (await portInUse('127.0.0.1', port)) return false;
+  const bindable = await new Promise(done => {
     const srv = createNetServer();
     srv.once('error', () => done(false));
     srv.once('listening', () => srv.close(() => done(true)));
     srv.listen(port, '0.0.0.0');
   });
+  return bindable;
 }
 
 /**
@@ -447,10 +468,18 @@ const ACTIONS = {
   }),
   doctor: () => launch('doctor', 'npx', ['expo', 'install', '--fix'], { cwd: APP }),
   server: () => launch('server', process.execPath, [join(ROOT, 'server', 'index.mjs')]),
-  expo: async () => launch('expo', 'npx',
-    ['expo', 'start', '--port', String(await pickMetroPort())], { cwd: APP }),
-  expoTunnel: async () => launch('expo', 'npx',
-    ['expo', 'start', '--tunnel', '--port', String(await pickMetroPort())], { cwd: APP }),
+  expo: async () => {
+    const port = await pickMetroPort();
+    const r = launch('expo', 'npx', ['expo', 'start', '--port', String(port)], { cwd: APP });
+    say('expo', `— panel chose port ${port} (8081 was ${port === 8081 ? 'free' : 'in use'}) —`, 'cmd');
+    return r;
+  },
+  expoTunnel: async () => {
+    const port = await pickMetroPort();
+    const r = launch('expo', 'npx', ['expo', 'start', '--tunnel', '--port', String(port)], { cwd: APP });
+    say('expo', `— panel chose port ${port} (tunnel) —`, 'cmd');
+    return r;
+  },
   // APK builds. Both run on THIS machine - the cloud one uploads the source to
   // Expo's builders, the local one needs Android Studio + JDK 17 installed.
   easWhoami: () => launch('build', 'npx', ['--yes', 'eas-cli', 'whoami'],
@@ -526,11 +555,14 @@ createServer(async (req, res) => {
       const env = readEnv();
       const serverUp = await probe('http://localhost:8787/health');
       const holders = await portPids(8081);
-      const metroBusy = holders.length > 0 && !entry('expo').child;
+      const p8081Busy = await portInUse('127.0.0.1', 8081);
+      const metroBusy = (holders.length > 0 || await portInUse('127.0.0.1', 8081))
+        && !entry('expo').child;
       return json(res, 200, {
         root: ROOT,
         metroBusy,
         port8081Holders: holders,
+        port8081Busy: p8081Busy,
         node: process.versions.node,
         nodeOk: Number(process.versions.node.split('.')[0]) >= 22,
         installed: existsSync(join(APP, 'node_modules')),
