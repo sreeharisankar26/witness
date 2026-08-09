@@ -486,9 +486,10 @@ const ACTIONS = {
   // `expo install` picks the version matching the installed SDK.
   fixBabel: () => launch('install', '', [], {
     cwd: APP,
+    env: easEnv(),
     raw: 'npx --yes expo install babel-preset-expo && npm install',
   }),
-  doctor: () => launch('doctor', 'npx', ['expo', 'install', '--fix'], { cwd: APP }),
+  doctor: () => launch('doctor', 'npx', ['expo', 'install', '--fix'], { cwd: APP, env: easEnv() }),
   // If one is already serving, launching another just exits — say so instead.
   server: async () => {
     if (await probe('http://localhost:8787/health')) {
@@ -498,15 +499,23 @@ const ACTIONS = {
     }
     return launch('server', process.execPath, [join(ROOT, 'server', 'index.mjs')]);
   },
+  // EXPO_TOKEN is needed here too, not just for builds. Once `eas init` writes
+  // an `owner` and project id into app.json, `expo start` verifies the session
+  // and otherwise stops on a login prompt it cannot show.
   expo: async () => {
+    if (!readToken()) {
+      return { ok: false, error: 'Expo needs your access token to serve this project (app.json now has an owner). Paste it in the build card — Step 1 — then press Start app again.' };
+    }
     const port = await pickMetroPort();
-    const r = launch('expo', 'npx', ['expo', 'start', '--port', String(port)], { cwd: APP });
+    const r = launch('expo', 'npx', ['expo', 'start', '--port', String(port)],
+      { cwd: APP, env: easEnv() });
     say('expo', `— panel chose port ${port} (8081 was ${port === 8081 ? 'free' : 'in use'}) —`, 'cmd');
     return r;
   },
   expoTunnel: async () => {
     const port = await pickMetroPort();
-    const r = launch('expo', 'npx', ['expo', 'start', '--tunnel', '--port', String(port)], { cwd: APP });
+    const r = launch('expo', 'npx', ['expo', 'start', '--tunnel', '--port', String(port)],
+      { cwd: APP, env: easEnv() });
     say('expo', `— panel chose port ${port} (tunnel) —`, 'cmd');
     return r;
   },
