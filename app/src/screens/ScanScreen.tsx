@@ -30,6 +30,8 @@ interface Props {
   worker: string;
   pending: number;
   online: boolean;
+  /** Radio on AND server answering. The header reflects THIS, not the radio. */
+  serverReachable: boolean;
   syncedLabel: string;
   syncStale: boolean;
   onZonePress: () => void;
@@ -47,7 +49,7 @@ interface Props {
 type Mode = 'closed' | 'tag' | 'plate';
 
 export default function ScanScreen({
-  zoneId, zoneName, worker, pending, online, syncedLabel, syncStale,
+  zoneId, zoneName, worker, pending, online, serverReachable, syncedLabel, syncStale,
   onZonePress, onScanned, onNameplate, onManualEntry, onReset,
   syncServer, syncError, onTestSync,
 }: Props) {
@@ -111,9 +113,16 @@ export default function ScanScreen({
           <Text style={s.zoneName}>{zoneName}</Text>
           <Text style={s.zoneChange}>tap to change</Text>
         </Pressable>
+        {/* Three states, not two. "ONLINE" used to mean only that the radio was
+            on, so the header could read ONLINE directly above "can't reach the
+            server" — technically true, and useless. */}
         <View style={s.status}>
-          <View style={[s.dot, { backgroundColor: online ? C.ok : C.check }]} />
-          <Text style={s.statusText}>{online ? 'ONLINE' : 'OFFLINE'}</Text>
+          <View style={[s.dot, {
+            backgroundColor: !online ? C.dim : serverReachable ? C.ok : C.stop,
+          }]} />
+          <Text style={s.statusText}>
+            {!online ? 'OFFLINE' : serverReachable ? 'ONLINE' : 'NO SERVER'}
+          </Text>
           {pending > 0 && <Text style={s.pending}>{pending} queued</Text>}
         </View>
       </View>

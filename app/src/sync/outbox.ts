@@ -26,6 +26,8 @@ export interface SyncResult {
   /** Permanently refused by the server. Retired so they cannot block the queue. */
   rejected: number;
   online: boolean;
+  /** Radio on AND the site server answering. This is what the header shows. */
+  serverReachable: boolean;
   pending: number;
   /** Why the last attempt failed, for display. Null when all is well. */
   lastError: string | null;
@@ -90,7 +92,13 @@ export async function drain(): Promise<SyncResult> {
   const online = await isOnline();
 
   if (rows.length === 0) {
-    return { sent: 0, failed: 0, rejected: 0, online, pending: 0, lastError: null, server: SERVER };
+    // Nothing to send, but the header still needs to know whether the server is
+    // there — otherwise it reads ONLINE while the app cannot reach anything.
+    const { ok } = await pingServer(2000);
+    return {
+      sent: 0, failed: 0, rejected: 0, online, serverReachable: ok,
+      pending: 0, lastError: null, server: SERVER,
+    };
   }
 
   const dev = await deviceId();
@@ -164,7 +172,12 @@ export async function drain(): Promise<SyncResult> {
   const after = await db.getFirstAsync<{ n: number }>(
     `SELECT COUNT(*) AS n FROM outbox WHERE synced_at IS NULL`,
   );
-  return { sent, failed, rejected, online, pending: after?.n ?? 0, lastError, server: SERVER };
+  return {
+    sent, failed, rejected, online,
+    // We just talked to it, or we just failed to. No need to ping separately.
+    serverReachable: sent > 0 || rejected > 0 ? true : failed === 0,
+    pending: after?.n ?? 0, lastError, server: SERVER,
+  };
 }
 
 /** Background drain. Cheap, and quiet when there is nothing to do. */

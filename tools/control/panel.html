@@ -200,8 +200,11 @@
 
       <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
         <div class="label" style="margin:0 0 8px">Test from the phone</div>
-        <p class="hint" style="margin:0 0 10px">Scan this with the phone's camera. If it
-        shows <code>{"ok":true}</code>, the phone can reach the sync server.</p>
+        <p class="hint" style="margin:0 0 10px">Scan this with the phone's camera. It tests
+        <b>the address the app was actually built with</b> — not whatever is selected
+        above. Those can differ, and testing the wrong one gives a false all-clear.</p>
+        <div id="qrmismatch" style="display:none;background:#3A2606;color:#FFE1AE;
+             border-radius:8px;padding:9px 11px;font-size:12px;margin:0 0 10px"></div>
         <div class="qr"><img id="healthqr" alt="health check QR" style="width:150px;height:150px" />
           <div><div class="url" id="healthurl" style="font-size:13px"></div>
           <div class="sub" style="margin-top:8px">Needs the sync server running.</div></div>
@@ -433,8 +436,20 @@ async function refresh(){
     } else aw.style.display = 'none';
   }
 
-  // Health-check QR follows whichever address is selected.
-  const base = sel.value || s.env.EXPO_PUBLIC_SERVER_URL || '';
+  // The QR must test what the APP uses (from .env), not what the dropdown shows.
+  // Testing the selected address reported {"ok":true} while the app was dialling
+  // a stale one — a false all-clear that sent us hunting a firewall that was fine.
+  const appBase = s.env.EXPO_PUBLIC_SERVER_URL || '';
+  const selBase = sel.value || '';
+  const mism = $('qrmismatch');
+  if(mism){
+    if(appBase && selBase && appBase !== selBase){
+      mism.style.display = '';
+      mism.innerHTML = 'The app uses <code>' + appBase + '</code> but <code>' + selBase
+        + '</code> is selected. Press <b>Save settings</b>, then <b>restart the app</b>.';
+    } else mism.style.display = 'none';
+  }
+  const base = appBase || selBase;
   const hurl = base ? base + '/health' : '';
   if(hurl && $('healthurl').textContent !== hurl){
     $('healthurl').textContent = hurl;

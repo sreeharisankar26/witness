@@ -48,6 +48,7 @@ export default function App() {
   const [manualSerial, setManualSerial] = useState('');
   const [pending, setPending] = useState(0);
   const [online, setOnline] = useState(false);
+  const [serverReachable, setServerReachable] = useState(false);
   const [worker, setWorkerState] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
 
@@ -69,7 +70,8 @@ export default function App() {
       setReady(true);
     })();
     const stop = startAutoSync(r => {
-      setPending(r.pending); setOnline(r.online); setSyncError(r.lastError);
+      setPending(r.pending); setOnline(r.online);
+      setServerReachable(r.serverReachable); setSyncError(r.lastError);
     });
     const t = setInterval(async () => setOnline(await isOnline()), 4000);
     return () => { stop(); clearInterval(t); };
@@ -114,7 +116,10 @@ export default function App() {
     if (!resolution || !worker) return;
     const ncr = await commitNcr(resolution, worker);
     await refresh();                 // memory must see the NCR just written
-    drain().then(r => { setPending(r.pending); setOnline(r.online); setSyncError(r.lastError); });
+    drain().then(r => {
+      setPending(r.pending); setOnline(r.online);
+      setServerReachable(r.serverReachable); setSyncError(r.lastError);
+    });
     Alert.alert(
       `${ncr.id} raised`,
       online
@@ -128,7 +133,10 @@ export default function App() {
     if (!resolution || !worker) return;
     await recordVerifiedInstall(resolution, worker);
     await refresh();
-    drain().then(r => { setPending(r.pending); setOnline(r.online); setSyncError(r.lastError); });
+    drain().then(r => {
+      setPending(r.pending); setOnline(r.online);
+      setServerReachable(r.serverReachable); setSyncError(r.lastError);
+    });
     setScreen('scan');
   }, [resolution, worker, refresh]);
 
@@ -136,7 +144,8 @@ export default function App() {
   const onTestSync = useCallback(async () => {
     const p = await pingServer();
     const r = await drain();
-    setPending(r.pending); setOnline(r.online); setSyncError(r.lastError);
+    setPending(r.pending); setOnline(r.online);
+    setServerReachable(p.ok); setSyncError(r.lastError);
     Alert.alert(
       p.ok ? 'Site server reachable' : 'Cannot reach the site server',
       p.ok
@@ -234,6 +243,7 @@ export default function App() {
             worker={worker}
             pending={pending}
             online={online}
+            serverReachable={serverReachable}
             syncedLabel={syncedLabel}
             syncStale={syncStale}
             onZonePress={() => setZonePicker(true)}
