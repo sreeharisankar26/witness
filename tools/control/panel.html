@@ -111,6 +111,7 @@
     <ol class="steps" id="steps">
       <li id="s-node"><div><b>Node 22+</b><small id="s-node-x">checking…</small></div></li>
       <li id="s-install"><div><b>Install dependencies</b><small>One time, 2–4 minutes.</small></div></li>
+      <li id="s-env"><div><b>Set your connection</b><small id="s-env-x">Pick your wifi below and press Save settings — a fresh clone has no address yet.</small></div></li>
       <li id="s-test"><div><b>Run the engine tests</b><small id="s-test-x">Proves the safety logic before any phone is involved.</small></div></li>
       <li id="s-expo"><div><b>Start the app</b><small>Then scan the QR with Expo Go.</small></div></li>
     </ol>
@@ -388,6 +389,12 @@ async function refresh(){
   if(!s.nodeOk) alertMsg('<b>Node '+s.node+' is too old.</b> The tests and the app need Node 22 or newer.','bad');
 
   $('s-install').classList.toggle('done', s.installed);
+
+  const hasEnv = Boolean(s.env && s.env.EXPO_PUBLIC_SERVER_URL);
+  $('s-env').classList.toggle('done', hasEnv);
+  $('s-env-x').textContent = hasEnv
+    ? `Sending to ${s.env.EXPO_PUBLIC_SERVER_URL}`
+    : 'Pick your wifi in Connection and press Save settings — a fresh clone has no address yet.';
 
   const t = s.procs.test;
   const passed = Boolean(t && t.meta && t.meta.exitCode === 0);

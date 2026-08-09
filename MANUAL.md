@@ -1,6 +1,6 @@
 # Witness — User Manual
 
-Everything the system does, what every screen means, and how to run the demo.
+Everything the system does, how to run it, and what every screen means.
 Written for someone who has never seen it before.
 
 ---
@@ -8,17 +8,18 @@ Written for someone who has never seen it before.
 ## Contents
 
 1. [What Witness is](#1-what-witness-is)
-2. [The three pieces](#2-the-three-pieces)
-3. [The control panel](#3-the-control-panel)
-4. [The phone app, screen by screen](#4-the-phone-app-screen-by-screen)
-5. [The verdicts](#5-the-verdicts)
-6. [Witness Memory](#6-witness-memory)
-7. [The supervisor dashboard](#7-the-supervisor-dashboard)
-8. [The tags](#8-the-tags)
-9. [Running the demo](#9-running-the-demo)
-10. [Resetting](#10-resetting)
-11. [Troubleshooting](#11-troubleshooting)
-12. [Glossary](#12-glossary)
+2. [Get it running — start here](#2-get-it-running--start-here)
+3. [Two ways onto a phone](#3-two-ways-onto-a-phone)
+4. [The control panel](#4-the-control-panel)
+5. [The phone app, screen by screen](#5-the-phone-app-screen-by-screen)
+6. [The verdicts](#6-the-verdicts)
+7. [Witness Memory](#7-witness-memory)
+8. [The supervisor dashboard](#8-the-supervisor-dashboard)
+9. [The tags](#9-the-tags)
+10. [Running the demo](#10-running-the-demo)
+11. [Making changes](#11-making-changes)
+12. [Troubleshooting](#12-troubleshooting)
+13. [Glossary](#13-glossary)
 
 ---
 
@@ -38,50 +39,137 @@ Witness puts the answer in front of them in under a second:
 
 Steps 1–4 work with the phone in airplane mode.
 
----
-
-## 2. The three pieces
+### The three pieces
 
 | Piece | Runs on | Needed for scanning? |
 |---|---|---|
-| **Phone app** | The Android phone | This *is* the product |
+| **Phone app** | An Android phone | This *is* the product |
 | **Sync server** | Your laptop | ❌ No — the app queues and syncs later |
-| **Dashboard** | Browser on your laptop | ❌ No — it's a read-only view |
+| **Dashboard** | Browser on your laptop | ❌ No — a read-only view |
 
-**The phone does the work.** The laptop is the site office: it receives what
-phones queued and shows the supervisor view. If the laptop catches fire, every
-phone on site still gives correct verdicts.
+**The phone does the work.** The laptop is the site office. If the laptop caught
+fire, every phone on site would still give correct verdicts.
 
 ---
 
-## 3. The control panel
+## 2. Get it running — start here
 
-Double-click **`Witness.bat`**. A browser page opens. This replaces every
-terminal command.
+**You need [Node 22 or newer](https://nodejs.org).** Nothing else. Check with
+`node -v`; if it's older, install the LTS and **reopen your terminal** — the
+installer edits your PATH and an open window keeps the old one.
+
+```bash
+git clone https://github.com/sreeharisankar26/witness.git
+cd witness
+```
+
+### Prove the logic works before touching a phone — 30 seconds
+
+```bash
+cd app
+npm test
+```
+
+Expect `# pass 66`, `# fail 0`, about 400ms. **No install needed** — the test
+suite has zero dependencies, deliberately, so a broken toolchain can never hide
+whether the safety logic is sound.
+
+### Then open the control panel
+
+Double-click **`Witness.bat`** (Windows). A page opens in your browser with a
+checklist that ticks itself off. Work down it:
+
+1. **Node 22+** — should already be green
+2. **Install dependencies** — press it once, 2–4 minutes
+3. **Set your connection** — **do not skip this**, see below
+4. **Run the engine tests** — should say 66 passed
+5. **Start the app** — a scannable QR appears
+
+> **Why step 3 matters and why it isn't automatic.** Your phone cannot reach
+> `localhost` — on the phone, that word means *the phone*. It needs your
+> laptop's address on the wifi you're both using. That address is different for
+> every person and every network, so it is deliberately **not** committed to the
+> repo. Pick your wifi adapter in **Connection**, press **Save settings**. That
+> writes `app/.env` for you.
+
+**No terminal?** Everything above except `git clone` is a button in the panel.
+
+---
+
+## 3. Two ways onto a phone
+
+| | Expo Go | Standalone APK |
+|---|---|---|
+| Setup | ~2 minutes | 10–20 minutes |
+| Needs | The Expo Go app from Play Store | A free Expo account |
+| Code changes | Reload and they appear | Rebuild |
+| Works without your laptop | ❌ streams from Metro | ✅ fully standalone |
+| Good for | Development, most testing | Filming, the submission |
+
+### Expo Go — the fast way
+
+1. Install **Expo Go** from the Play Store
+2. Phone and laptop on the **same wifi**
+3. Panel → **Start app**
+4. Scan the QR that appears, or type the `exp://…` URL into Expo Go
+
+The app builds on your phone in ~30 seconds. Grant the camera permission.
+
+Your phone is now running the code in this folder. Edit a file, save it, and the
+app reloads. To force it: shake the phone → **Reload**.
+
+> **If Expo Go won't connect:** you're on different networks, or a VPN is on.
+> Same wifi, VPN off. Failing that, press **Start in tunnel mode** — slower, but
+> it routes around the network entirely.
+
+> **One catch:** Expo Go streams its bundle from your laptop over wifi. For the
+> airplane-mode demo that's a real risk — a reconnect mid-take throws a red
+> banner across the shot. Use the APK for that.
+
+### The APK — the standalone way
+
+Panel → **Build the phone app (APK)**. Full walkthrough in
+**[BUILD_APK.md](BUILD_APK.md)**; the short version:
+
+1. **Set your connection first** — the address is baked in at build time
+2. Paste an **Expo access token** (from expo.dev → Settings → Access tokens)
+3. **Set up git** — EAS uploads your source through git
+4. **Build in the cloud** — 10–20 minutes, a download link appears in the log
+5. Open that link **on the phone's browser**, download, install
+
+Android warns about installing outside the Play Store. Expected for any
+unpublished app.
+
+---
+
+## 4. The control panel
+
+Double-click **`Witness.bat`**. This replaces every terminal command.
 
 | Section | What it does |
 |---|---|
-| **Start here** | A checklist that ticks itself: Node version → dependencies → tests → app running |
-| **Phone app** | Starts Expo and shows a **scannable QR** for Expo Go, plus the URL to type |
-| **Site systems** | Starts/stops the sync server, opens the dashboard, resets demo data |
-| **Checks & setup** | Runs the 66 tests, installs dependencies, fixes package versions |
-| **Connection** | Picks your wifi address and writes it to `app/.env` — plus a QR to test from the phone's browser |
+| **Start here** | The five-step checklist, ticking itself off |
+| **Phone app** | Starts Expo, shows a scannable QR and the URL to type |
+| **Site systems** | Sync server, dashboard, reset demo data |
+| **Checks & setup** | The 66 tests, install, fix package versions, fix Babel preset |
+| **Connection** | Your wifi address, model API key, and a QR to test from the phone |
 | **Printable tags** | Opens the tag PDF, regenerates seed data and tags |
-| **Build the APK** | Expo token → cloud or local build → download link |
+| **Build the APK** | Token → git → cloud or local build |
 | **Check everything** | Real checks against your machine, each row saying what to fix |
 
-Every long-running job streams its output, with a **Copy log** button.
-**Quit everything** stops all child processes cleanly.
+Every long job streams its output with a **Copy log** button. **Quit everything**
+stops all child processes cleanly.
 
-> **Why your phone can't use `localhost`.** On the phone, `localhost` means *the
-> phone*. It needs your laptop's address on the wifi — that's what the Connection
-> dropdown sets. The QR beside it opens a health check in the phone's browser: if
-> that shows `{"ok":true}`, syncing will work. If it doesn't load, it's almost
-> always Windows Firewall blocking Node on private networks.
+Things it handles for you, because each one cost us an evening:
+
+- Picks a free port if 8081 is taken, rather than failing on a prompt
+- Reuses a running sync server instead of crashing on "address in use"
+- Warns if the app's baked-in address no longer matches your PC
+- Warns if the project folder is too deep for Windows' 260-character limit
 
 ---
 
-## 4. The phone app, screen by screen
+## 5. The phone app, screen by screen
 
 ### First launch — who is on this phone
 
@@ -93,12 +181,12 @@ the entire point of a QA record, so this isn't decoration.
 | Element | Meaning |
 |---|---|
 | **WORKING IN** (top left) | Your zone. Tap to change. **Witness never guesses your location** — the approved revision depends on it. |
-| **ONLINE / OFFLINE** (top right) | Radio state. `N queued` means writes are waiting to sync. |
-| **approved record synced…** | How fresh the record is. Turns amber when stale. |
-| **SCAN** | Opens the camera. Auto-closes the instant it reads a tag. |
+| **OFFLINE / NO SERVER / ONLINE** | Grey: no radio. Red: radio on, server unreachable. Green: both fine. `N queued` shows writes waiting. |
+| **approved record synced…** | How fresh the record is. Amber when stale. |
+| **SCAN** | Opens the camera. Closes the instant it reads a tag. |
 | **No tag? Read the nameplate** | Rung 2 — a vision model reads the plate. Needs signal. |
 | **Type it in** | Rung 3 — always works. |
-| **Sync warning** | Appears only when something is queued or failing. Shows the exact address it's posting to. **Tap it to run a live connection test.** |
+| **Sync warning** | Appears only when something is queued or failing. Shows the exact address it's posting to. **Tap it for a live connection test.** |
 | **Long-press WITNESS (2.5s)** | Reset this device between takes. |
 
 ### The verdict screen
@@ -109,10 +197,10 @@ Three things happen the moment a tag resolves, in this order:
 2. **The phone vibrates** a distinct pattern — works at 95 dB, works in a pocket
 3. **It speaks** — nice when you can hear it
 
-The screen never waits for the model. If a better phrasing arrives from the
+The screen never waits for the model. If better phrasing arrives from the
 network it replaces the caption afterwards.
 
-At the bottom, **provenance** — how the part was identified and how confident,
+At the bottom, **provenance**: how the part was identified and how confident,
 that the ruling was a deterministic join computed on the phone, whether the
 wording came from a model or a template, and the record's age.
 
@@ -128,7 +216,7 @@ the verdict `ADVISORY`, because the identification still came from perception.
 
 ---
 
-## 5. The verdicts
+## 6. The verdicts
 
 | Verdict | Screen | Means | Action offered |
 |---|---|---|---|
@@ -163,7 +251,7 @@ adding one.
 
 ---
 
-## 6. Witness Memory
+## 7. Witness Memory
 
 When a component has been the wrong revision in the same zone before, a banner
 appears **above** the verdict — before you install, not after.
@@ -182,35 +270,36 @@ explicit: 2 distinct units → `RECURRING`, 3 or more → `SYSTEMIC`.
 
 ---
 
-## 7. The supervisor dashboard
+## 8. The supervisor dashboard
 
-Polls every 3 seconds, so it updates the moment a phone's queue drains.
+Panel → **Open dashboard**. Polls every 3 seconds, so it updates the moment a
+phone's queue drains.
 
 - **Field-verified %** — distinct units verified ÷ distinct units in the zone
 - **Open NCRs**
 - **Zones at risk** — driven by *repeat* failures, not raw counts
 - **Rework risk by zone** — coverage bar and risk pill per zone
-- **Most confused components** — where the same mistake keeps happening, by distinct units
+- **Most confused components** — where the same mistake keeps happening
 - **Live from the field** — updates as phones come back into signal
 - **Nonconformances** — every one confirmed by a human at the point of install
 
 > **Coverage cannot be inflated.** Both numerator and denominator count distinct
 > units. Scanning one part 500 times moves nothing. Verifying a genuinely
 > different part moves it. Two phones verifying the same unit is still one work
-> item. There are seven tests pinning exactly this.
+> item. Seven tests pin exactly this.
 
 ---
 
-## 8. The tags
+## 9. The tags
 
 `witness_qr_tags.pdf` — generate it with **Rebuild tag sheet** in the panel.
+It's not committed, so it can never drift from the seed data it was printed from.
 
 - Payload format: `WTNS:1|<SKU>|<SERIAL>`, e.g. `WTNS:1|GT-12|SN-4471`
 - **Error correction level H** — roughly 30% of the tag can be destroyed and it
   still reads. That's what backs the "works dirty" claim: a property of the tag,
   not a trick.
-- The serial is printed in human-readable text underneath, so a worker can fall
-  back to manual entry.
+- The serial is printed in readable text underneath, for manual entry
 
 **Print at 100% scale.** "Fit to page" shrinks the code and it stops scanning.
 
@@ -219,14 +308,13 @@ Anything that isn't a Witness tag is refused outright rather than half-read.
 > **Real equipment already carries this.** Manufacturers put model and serial on
 > nameplates and barcodes. Our printed tags stand in for tags that already exist
 > in the supply chain — Witness reads what's there; it doesn't ask sites to
-> relabel everything. That's also why rung 2 (nameplate) exists, for items that
-> were never serialised.
+> relabel everything. That's also why rung 2 exists, for items never serialised.
 
 ---
 
-## 9. Running the demo
+## 10. Running the demo
 
-**Before you start:** set the connection address, start the sync server, open the
+**Before you start:** set the connection, start the sync server, open the
 dashboard, reset both the phone and the server.
 
 Set the phone to **Zone A**, then:
@@ -249,16 +337,31 @@ about 3 seconds.
 4. Airplane mode **off**
 5. Within ~5 seconds the counter clears and it lands on the dashboard
 
-> **Use the standalone APK for this shot.** Expo Go streams its bundle from your
-> laptop over wifi; a reconnect mid-take throws a red banner across your best
-> fifteen seconds. See [BUILD_APK.md](BUILD_APK.md).
+**Use the APK for this shot**, not Expo Go.
 
 **Film verdicts 3 and 4.** Every team shows a happy path; almost none show what
 their system does when it doesn't know.
 
 ---
 
-## 10. Resetting
+## 11. Making changes
+
+| What changed | Expo Go | APK |
+|---|---|---|
+| Any `.ts` / `.tsx` file | Reload (shake → Reload) | Rebuild |
+| `app/.env` — the server address | **Restart the app**, not just reload | Rebuild |
+| `witness_seed.json` | Reload — the phone re-seeds itself | Rebuild |
+| Anything in `server/` or `dashboard/` | Restart the sync server | Same |
+
+**Why `.env` needs a restart:** `EXPO_PUBLIC_*` values are compiled into the
+bundle when it starts. A reload picks up code but keeps the old address.
+
+**Why the seed doesn't:** the record carries a fingerprint. Change it, and the
+phone notices on next launch and re-seeds itself. Earlier this seeded exactly
+once ever, so a phone could hold a stale record indefinitely with nothing on
+screen to explain the wrong numbers.
+
+### Resetting
 
 | What | How |
 |---|---|
@@ -272,25 +375,31 @@ matters, because a record older than 24h correctly downgrades every verdict to
 
 ---
 
-## 11. Troubleshooting
+## 12. Troubleshooting
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `npm test` syntax error | Node older than 22 | Install the LTS from nodejs.org, **reopen the terminal** |
-| `'npm' is not recognized` | Node not installed, or PATH not refreshed | Install Node, then close and reopen the window |
-| Expo Go won't connect | Different networks, or a VPN | Same wifi, VPN off. Failing that, **tunnel mode** in the panel |
-| Queue never clears | Firewall, or wrong address | Scan the health-check QR in the panel from the phone. Allow Node on Private networks |
-| Queue never clears **after changing the address** | The address is baked in at app start | Restart the app (or rebuild the APK) |
-| Verdicts appear, nothing spoken | Phone on silent, or no TTS voice | Volume up; Android → Accessibility → Text-to-speech. Colour and haptics still work — that's deliberate |
+| `npm test` syntax error | Node older than 22 | Install the LTS, **reopen the terminal** |
+| `'npm' is not recognized` | Node missing, or PATH not refreshed | Install Node, close and reopen the window |
+| Expo Go won't connect | Different networks, or a VPN | Same wifi, VPN off. Else **tunnel mode** |
+| Header says **NO SERVER** | Radio fine, server unreachable | See the three rows below |
+| Queue never clears — firewall | Windows blocks Node inbound | `tools/allow-firewall.bat` → **right-click, Run as administrator** |
+| Queue never clears — wrong address | Your IP changed | Panel warns you. Save settings, **restart the app** |
+| Queue never clears — after changing the address | Address is baked in at start | Restart the app; a reload isn't enough |
+| Wifi marked "Public" | Firewall rule won't apply | Settings → Network → Wi-Fi → set to **Private** |
+| Verdicts appear, nothing spoken | Silent mode, or no TTS voice | Volume up; Android → Accessibility → Text-to-speech. Colour and haptics still work — deliberate |
 | Camera won't read the tag | Printed at "fit to page", or too close | Reprint at 100%. Hold 15–25cm. Tap **LIGHT** |
 | "Not a Witness tag" | Scanning some other QR | Only tags from the sheet parse. That refusal is intended |
 | Wrong verdict | Phone is in the wrong zone | Tap the zone name. Zone is chosen, never inferred |
-| Nameplate reading unavailable | No model key set | Add one in **Connection**, then restart the app |
 | Everything says ADVISORY | Record older than 24h, or the phone's clock is wrong | Reset the phone; check the date |
+| Nameplate reading unavailable | No model key set | Add one in **Connection**, restart the app |
+| Numbers look stale | Old record on the device | Reload — it re-seeds itself now. Or long-press WITNESS → Reset |
+
+Build problems have their own table in **[BUILD_APK.md](BUILD_APK.md)**.
 
 ---
 
-## 12. Glossary
+## 13. Glossary
 
 | Term | Meaning |
 |---|---|
@@ -304,3 +413,5 @@ matters, because a record older than 24h correctly downgrades every verdict to
 | **Superseded** | An older revision replaced by a newer approved one. |
 | **BINDING / ADVISORY** | Whether a verdict is a ruling or a prompt. |
 | **Outbox** | The local queue of writes waiting to reach the server. |
+| **Metro** | Expo's dev server. Streams the app to Expo Go over wifi. |
+| **EAS** | Expo's cloud build service. Turns the source into an installable APK. |
