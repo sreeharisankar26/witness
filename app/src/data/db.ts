@@ -106,6 +106,25 @@ export async function setWorker(name: string): Promise<void> {
 }
 
 /**
+ * Cheap, stable fingerprint of the approved record.
+ *
+ * Not cryptographic — it only has to change when the record changes.
+ */
+function fingerprint(snap: RecordSnapshot): string {
+  const shape = JSON.stringify({
+    u: snap.units.map(u => `${u.serial}:${u.rev}`).sort(),
+    s: snap.submittals.map(x => `${x.id}:${x.sku}:${x.zone_id}:${x.approved_rev}`).sort(),
+    r: snap.revisions.map(r => `${r.sku}:${r.rev}:${r.superseded_by}`).sort(),
+    n: snap.ncrs.map(n => n.id).sort(),
+    i: ((snap as any).installs ?? []).map((i: any) => `${i.id}:${i.status}`).sort(),
+    z: (snap.zones ?? []).map(z => z.id).sort(),
+  });
+  let h = 5381;
+  for (let i = 0; i < shape.length; i++) h = ((h * 33) ^ shape.charCodeAt(i)) >>> 0;
+  return `${h.toString(36)}-${shape.length.toString(36)}`;
+}
+
+/**
  * Idempotent. Loads the approved record into SQLite on first launch.
  *
  * The sync timestamp is stamped at INSTALL time, not baked into the seed file.
@@ -115,11 +134,21 @@ export async function setWorker(name: string): Promise<void> {
  */
 export async function ensureSeeded(force = false): Promise<void> {
   const db = await openDb();
-  if ((await getMeta('seeded')) && !force) return;
-
   const snap = await getAdapter().fetch();
+  const fp = fingerprint(snap);
+
+  // Seeding used to happen exactly once, ever. So a device seeded from an older
+  // build kept that record forever — showing numbers that no longer matched the
+  // data everyone else had, with nothing on screen to explain it. Now the
+  // record carries a fingerprint, and a changed record re-seeds itself.
+  if (!force && (await getMeta('seeded')) && (await getMeta('seed_fingerprint')) === fp) {
+    return;
+  }
+  const reseeding = Boolean(await getMeta('seeded'));
   await db.withTransactionAsync(async () => {
-    if (force) {
+    // A refreshed record replaces the old one wholesale. Keeping half of each
+    // is what produces numbers nobody can account for.
+    if (force || reseeding) {
       for (const t of ['units', 'submittals', 'revisions', 'ncrs', 'installs', 'events', 'outbox', 'zones']) {
         await db.runAsync(`DELETE FROM ${t}`);
       }
@@ -154,7 +183,9 @@ export async function ensureSeeded(force = false): Promise<void> {
     await db.runAsync(`INSERT OR REPLACE INTO meta VALUES ('record_synced_at', ?)`,
       new Date().toISOString());
     await db.runAsync(`INSERT OR REPLACE INTO meta VALUES ('seeded', '1')`);
+    await db.runAsync(`INSERT OR REPLACE INTO meta VALUES ('seed_fingerprint', ?)`, fp);
   });
+  if (reseeding) await logEvent('RECORD_REFRESHED', { fingerprint: fp });
 }
 
 /** Wipe local state and reload the record. Used by the reset gesture. */
@@ -294,7 +325,15 @@ export async function recordVerifiedInstall(r: Resolution, by: string): Promise<
   await logEvent('INSTALL_VERIFIED', install);
 }
 
-/** Field-verified coverage per zone - what the supervisor dashboard shows. */
+/**
+ * Field-verified coverage per zone, counted in distinct units.
+ *
+ * NOTE: nothing in the app calls this today — the supervisor dashboard computes
+ * the same figures server-side from synced data. It is kept because the query is
+ * the phone-side equivalent and is covered by sync.test.ts, so an on-device
+ * summary screen can use it without re-deriving the rules. Flagging it plainly
+ * so nobody assumes the app is already running it.
+ */
 export async function zoneCoverage(): Promise<
   { zone_id: string; verified: number; flagged: number; pct: number }[]
 > {

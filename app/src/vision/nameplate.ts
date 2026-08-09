@@ -21,7 +21,6 @@
  * to manual entry, which always works.
  */
 import type { NameplateReading } from '../engine/types';
-import { NAMEPLATE_MIN_CONFIDENCE } from '../engine/resolve';
 
 const BASE_URL = process.env.EXPO_PUBLIC_LLM_URL ?? '';
 const API_KEY = process.env.EXPO_PUBLIC_LLM_KEY ?? '';
@@ -155,10 +154,3 @@ export async function readNameplate(base64Jpeg: string): Promise<NameplateReadin
   }
 }
 
-/**
- * Is this reading good enough to resolve without the worker retyping it?
- * Below the floor we still show it - we just make them confirm the characters.
- */
-export function isConfidentEnough(r: NameplateReading): boolean {
-  return r.ok && r.confidence >= NAMEPLATE_MIN_CONFIDENCE;
-}
