@@ -195,6 +195,9 @@
       <!-- Isolates the firewall question in ten seconds. If the phone's browser
            can load this, the phone can sync; if it cannot, no amount of app
            debugging will help. -->
+      <div id="addrwarn" style="display:none;margin-top:14px;background:#3A0D0F;color:#FFC9CB;
+           border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.55"></div>
+
       <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
         <div class="label" style="margin:0 0 8px">Test from the phone</div>
         <p class="hint" style="margin:0 0 10px">Scan this with the phone's camera. If it
@@ -202,6 +205,14 @@
         <div class="qr"><img id="healthqr" alt="health check QR" style="width:150px;height:150px" />
           <div><div class="url" id="healthurl" style="font-size:13px"></div>
           <div class="sub" style="margin-top:8px">Needs the sync server running.</div></div>
+        </div>
+        <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+          <div class="label" style="margin:0 0 8px">If the phone still cannot reach it</div>
+          <p class="hint" style="margin:0 0 10px">Windows blocks incoming connections to Node by
+          default, so the laptop works and the phone gets nothing. Open the
+          <code>tools</code> folder, <b>right-click <code>allow-firewall.bat</code></b> and
+          choose <b>Run as administrator</b>.</p>
+          <button class="ghost" onclick="openTools()">Open the tools folder</button>
         </div>
       </div>
     </div>
@@ -328,6 +339,12 @@ function view(what){
   if(!w) alertMsg('Your browser blocked the new tab. Allow pop-ups for localhost, or open <code>/view/'+what+'</code> manually.','warn');
 }
 
+async function openTools(){
+  const r = await api('/api/open-tools', {});
+  if(!r.ok) alertMsg('Open this folder yourself:<br><code>'+(r.path||'')+'</code>','warn');
+  else alertMsg('Right-click <b>allow-firewall.bat</b> → <b>Run as administrator</b>.','good');
+}
+
 async function openFolder(){
   const r = await api('/api/open-folder', {});
   if(!r.ok) alertMsg('Could not open the folder. It is at:<br><code>'+(r.path||'')+'</code>','warn');
@@ -402,6 +419,19 @@ async function refresh(){
     if(cur && [...sel.options].some(o=>o.value===cur)) sel.value = cur;
   }
   if(document.activeElement !== $('llmurl')) $('llmurl').value = s.env.EXPO_PUBLIC_LLM_URL || '';
+
+  // Loudly flag an address that no longer belongs to this machine.
+  const aw = $('addrwarn');
+  if(aw && s.address){
+    if(s.address.known && !s.address.matches){
+      aw.style.display = '';
+      aw.innerHTML = '<b>The app is dialling an address this PC no longer has.</b><br>'
+        + 'App was built with <code>' + s.address.configured + '</code>, but this PC is now '
+        + '<code>' + (s.address.current.join(', ') || 'not on a network') + '</code>.<br>'
+        + 'Pick the right adapter above, press <b>Save settings</b>, then '
+        + '<b>restart the app</b> — the address is baked in when it starts.';
+    } else aw.style.display = 'none';
+  }
 
   // Health-check QR follows whichever address is selected.
   const base = sel.value || s.env.EXPO_PUBLIC_SERVER_URL || '';

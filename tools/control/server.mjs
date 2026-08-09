@@ -304,6 +304,28 @@ EXPO_PUBLIC_VLM_MODEL=${cur.EXPO_PUBLIC_VLM_MODEL || 'claude-sonnet-5'}
   return cur;
 }
 
+/**
+ * Does the address the phone was given still belong to this machine?
+ *
+ * A laptop's LAN IP changes with the network. The app bakes the address in at
+ * start, so moving from one wifi to another leaves the phone dialling a dead
+ * address — and the symptom ("can't reach the server") looks identical to a
+ * firewall block. This tells the two apart without guessing.
+ */
+function addressIsCurrent() {
+  const url = readEnv().EXPO_PUBLIC_SERVER_URL || '';
+  const m = /^https?:\/\/([0-9.]+):/.exec(url);
+  if (!m) return { known: false, configured: url, current: [] };
+  const configured = m[1];
+  const current = lanIps().map(i => i.ip);
+  return {
+    known: true,
+    configured,
+    current,
+    matches: current.includes(configured),
+  };
+}
+
 async function probe(url, ms = 1200) {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), ms);
@@ -577,6 +599,7 @@ createServer(async (req, res) => {
         env: { ...env, EXPO_PUBLIC_LLM_KEY: env.EXPO_PUBLIC_LLM_KEY ? '••••••••' : '' },
         ips: lanIps(),
         serverUp,
+        address: addressIsCurrent(),
         files: Object.fromEntries(Object.entries(SERVE).map(([k, v]) => [k, existsSync(v)])),
         expUrl: entry('expo').meta.expUrl || null,
         procs: Object.fromEntries([...procs].map(([k, v]) => [k, {
@@ -674,6 +697,12 @@ createServer(async (req, res) => {
         { name: 'Tag sheet PDF', ok: existsSync(SERVE.tags), detail: existsSync(SERVE.tags) ? `${Math.round(statSync(SERVE.tags).size / 1024)} KB` : 'press Rebuild tag sheet' },
         { name: 'QR generator', ok: qrOk, detail: qrOk ? 'renders' : qrErr },
         { name: 'Python (only for rebuilding data/tags)', ok: py.ok, detail: py.version || 'not found — optional' },
+        { name: 'Phone address still valid', ok: !addressIsCurrent().known || addressIsCurrent().matches,
+          detail: !addressIsCurrent().known
+            ? 'no address saved yet — press Save settings'
+            : addressIsCurrent().matches
+              ? `${addressIsCurrent().configured} is one of this PC's addresses`
+              : `the app points at ${addressIsCurrent().configured}, but this PC is now ${addressIsCurrent().current.join(', ') || '(no network)'} — press Save settings and restart the app` },
         { name: 'Sync server reachable', ok: serverUp, detail: serverUp ? 'localhost:8787' : 'not running — press Start sync server' },
         { name: 'Network address found', ok: lanIps().length > 0, detail: lanIps().map(i => `${i.ip} (${i.iface})`).join(', ') || 'none — check wifi' },
         { name: '.env written', ok: existsSync(ENV_PATH), detail: existsSync(ENV_PATH) ? (readEnv().EXPO_PUBLIC_SERVER_URL || '(no server url)') : 'press Save settings' },
@@ -740,6 +769,15 @@ createServer(async (req, res) => {
     }
 
     /** Only the file manager needs an OS call; everything viewable is served. */
+    if (req.method === 'POST' && url.pathname === '/api/open-tools') {
+      try {
+        const dir = join(ROOT, 'tools');
+        if (isWin) spawn('explorer.exe', [dir], { detached: true });
+        else spawn(process.platform === 'darwin' ? 'open' : 'xdg-open', [dir], { detached: true });
+        return json(res, 200, { ok: true, path: dir });
+      } catch (e) { return json(res, 200, { ok: false, error: String(e.message) }); }
+    }
+
     if (req.method === 'POST' && url.pathname === '/api/open-folder') {
       try {
         if (isWin) spawn('explorer.exe', [ROOT], { detached: true, windowsHide: false });
