@@ -1,0 +1,24 @@
+Witness — Kaya AI · IIT India Hackathon 2026 · Track 1 (Physical AI)
+
+Catches the wrong part before it goes into a building.
+
+A worker points a phone at a part. In under a second, offline, they get a
+spoken ruling: accepted, held, or refused. The thesis is one sentence — a model
+reads the world, and never rules on it. Perception is a model; a compliance
+ruling is a pure function over a local record, with no model anywhere on that
+path, because on a building site a confidently wrong compliance ruling is a
+safety incident.
+
+Where to look first:
+
+  app/src/engine/resolve.ts   the ruling. No model, no network, no clock.
+  server/ingest.mjs           what is allowed to become "approved".
+  server/ensemble.mjs         disagreement between two reads, as the signal.
+  server/reorder.mjs          three wrong parts read as one bad delivery.
+  docs/evidence/              benchmark, backtest and model-check output.
+  docs/RED_TEAM_1.md          two adversarial reviews, and the bugs they found.
+
+  cd app && npm test          189 tests, about two seconds, nothing to install.
+
+Team Espada — IIT Hyderabad
+Sree Harisankar · Priyanshu Kripashankar Singh · Mithun N · Nishanth A
