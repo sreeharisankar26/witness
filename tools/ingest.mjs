@@ -148,7 +148,21 @@ const ctx = {
 };
 
 const e = env();
-const cfg = { url: e.EXPO_PUBLIC_LLM_URL, key: e.EXPO_PUBLIC_LLM_KEY, model: e.EXPO_PUBLIC_VLM_MODEL || e.EXPO_PUBLIC_LLM_MODEL };
+/**
+ * WITNESS_MODEL and WITNESS_KEY override app/.env for one run.
+ *
+ * Free-tier daily quota is counted per project AND per model. When one model is
+ * exhausted an hour before a deadline, the fix is a sibling model or a key from
+ * a second project — and editing a dotfile to try each one, then remembering to
+ * put it back, is exactly the kind of errand that goes wrong at that hour.
+ *
+ *   WITNESS_MODEL=gemini-2.5-flash-lite node tools/ingest.mjs
+ */
+const cfg = {
+  url: process.env.WITNESS_URL || e.EXPO_PUBLIC_LLM_URL,
+  key: process.env.WITNESS_KEY || e.EXPO_PUBLIC_LLM_KEY,
+  model: process.env.WITNESS_MODEL || e.EXPO_PUBLIC_VLM_MODEL || e.EXPO_PUBLIC_LLM_MODEL,
+};
 let useModel = Boolean(cfg.url && cfg.key);
 /** How many independent reads per document. Two is enough to catch instability. */
 const READS = Number(process.env.WITNESS_READS || 2);

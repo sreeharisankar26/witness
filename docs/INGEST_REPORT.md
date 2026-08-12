@@ -1,6 +1,6 @@
 # Ingestion report
 
-Generated 2026-08-12T23:13:29.455Z by `tools/ingest.mjs`.
+Generated 2026-08-12T23:49:18.145Z by `tools/ingest.mjs`.
 
 A model reads the documents. `server/ingest.mjs` decides what is allowed to
 become an approved revision. Every row is accounted for — nothing is silently
