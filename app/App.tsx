@@ -19,21 +19,24 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import ScanScreen from './src/screens/ScanScreen';
 import VerdictScreen from './src/screens/VerdictScreen';
 import NameplateScreen from './src/screens/NameplateScreen';
-import { C, T, GLOVE_TARGET } from './src/theme';
+import ReportScreen from './src/screens/ReportScreen';
+import { C, T, MONO, GLOVE_TARGET } from './src/theme';
+import Press from './src/components/Press';
 import { resolve, parseTag, tagFrom } from './src/engine/resolve';
 import type {
   RecordSnapshot, Resolution, ScannedTag, NameplateReading, Zone,
 } from './src/engine/types';
 import {
   ensureSeeded, loadSnapshot, logEvent, commitNcr, recordVerifiedInstall,
-  pendingCount, getWorker, setWorker, resetAll, touchSync,
+  commitReport, pendingCount, getWorker, setWorker, resetAll, touchSync,
 } from './src/data/db';
+import type { ReportKind } from './src/data/db';
 import { drain, isOnline, startAutoSync, pingServer, SERVER } from './src/sync/outbox';
 import { readNameplate } from './src/vision/nameplate';
 
 const CREW = ['M. Nair', 'P. Singh', 'A. Kumar', 'S. Harisankar'];
 
-type Screen = 'scan' | 'verdict' | 'nameplate';
+type Screen = 'scan' | 'verdict' | 'nameplate' | 'report';
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -140,6 +143,36 @@ export default function App() {
     setScreen('scan');
   }, [resolution, worker, refresh]);
 
+  /**
+   * Testimony, not adjudication.
+   *
+   * Deliberately does NOT call refresh() the way NCR confirmation does. A
+   * worker's note changes nothing the engine reasons about, so re-reading the
+   * snapshot would imply it might. It queues, it syncs, a human reads it.
+   */
+  const onSubmitReport = useCallback(async (kind: ReportKind, note: string) => {
+    if (!resolution || !worker) return;
+    const report = await commitReport(
+      { serial: resolution.serial, sku: resolution.sku, zoneId: resolution.zone_id },
+      kind, note, worker,
+    );
+    setPending(await pendingCount());
+    drain().then(r => {
+      setPending(r.pending); setOnline(r.online);
+      setServerReachable(r.serverReachable); setSyncError(r.lastError);
+    });
+    Alert.alert(
+      'Report filed',
+      (kind === 'DAMAGED'
+        ? `${report.sku} ${report.serial} is on the reorder list.`
+        : kind === 'WRONG_ITEM'
+          ? `Logged. If more of this part turn up at the same revision, the site record will call it a mis-order.`
+          : 'Logged for your supervisor.')
+      + (online ? '' : '\n\nSaved on this phone — it will sync by itself when you get signal.'),
+    );
+    setScreen('scan');
+  }, [resolution, worker, online]);
+
   /** Tap the sync warning to find out precisely what is wrong. */
   const onTestSync = useCallback(async () => {
     const p = await pingServer();
@@ -221,10 +254,11 @@ export default function App() {
               Who's on this phone? Every flag you confirm is recorded against your name.
             </Text>
             {CREW.map(n => (
-              <Pressable key={n} style={st.crewRow}
-                         onPress={async () => { await setWorker(n); setWorkerState(n); }}>
+              <Press key={n} style={st.crewRow} depth={0.99}
+                     onPress={async () => { await setWorker(n); setWorkerState(n); }}>
                 <Text style={st.crewText}>{n}</Text>
-              </Pressable>
+                <Text style={st.crewMark}>→</Text>
+              </Press>
             ))}
           </View>
         </SafeAreaView>
@@ -272,6 +306,20 @@ export default function App() {
             onConfirmNcr={onConfirmNcr}
             onVerifyInstall={onVerifyInstall}
             onDismiss={() => setScreen('scan')}
+            onReportProblem={() => setScreen('report')}
+          />
+        )}
+
+        {/* Reached from the verdict, so the part is already identified. The
+            worker never re-types a serial they have just scanned. */}
+        {screen === 'report' && resolution && (
+          <ReportScreen
+            serial={resolution.serial}
+            sku={resolution.sku}
+            zoneName={zoneName}
+            worker={worker}
+            onSubmit={onSubmitReport}
+            onCancel={() => setScreen('verdict')}
           />
         )}
 
@@ -281,18 +329,20 @@ export default function App() {
                onRequestClose={() => setZonePicker(false)}>
           <View style={st.sheetWrap}>
             <View style={st.sheet}>
+              <View style={st.grab} />
               <Text style={st.sheetTitle}>Where are you working?</Text>
               <Text style={st.sheetSub}>
                 Witness never guesses your location — the approved revision depends on it.
               </Text>
               <ScrollView>
                 {zones.map(z => (
-                  <Pressable key={z.id} style={st.zoneRow}
-                             onPress={() => { setZoneId(z.id); setZonePicker(false); }}>
-                    <Text style={[st.zoneRowText, z.id === zoneId && { color: C.accent }]}>
+                  <Press key={z.id} style={st.zoneRow} depth={0.99}
+                         onPress={() => { setZoneId(z.id); setZonePicker(false); }}>
+                    <Text style={[st.zoneRowText, z.id === zoneId && { fontWeight: '700' }]}>
                       {z.name}
                     </Text>
-                  </Pressable>
+                    {z.id === zoneId && <Text style={st.zoneCurrent}>CURRENT</Text>}
+                  </Press>
                 ))}
               </ScrollView>
             </View>
@@ -304,22 +354,23 @@ export default function App() {
                onRequestClose={() => setManual(false)}>
           <View style={st.sheetWrap}>
             <View style={st.sheet}>
+              <View style={st.grab} />
               <Text style={st.sheetTitle}>Enter the tag by hand</Text>
               <Text style={st.sheetSub}>Both are printed under the code on every tag.</Text>
               <TextInput
-                style={st.input} placeholder="Part code, e.g. GT-12" placeholderTextColor={C.dim}
+                style={[st.input, MONO]} placeholder="Part code, e.g. GT-12" placeholderTextColor={C.text3}
                 autoCapitalize="characters" value={manualSku} onChangeText={setManualSku}
               />
               <TextInput
-                style={st.input} placeholder="Serial, e.g. SN-4471" placeholderTextColor={C.dim}
+                style={[st.input, MONO]} placeholder="Serial, e.g. SN-4471" placeholderTextColor={C.text3}
                 autoCapitalize="characters" value={manualSerial} onChangeText={setManualSerial}
               />
-              <Pressable style={st.sheetBtn} onPress={submitManual}>
+              <Press style={st.sheetBtn} onPress={submitManual}>
                 <Text style={st.sheetBtnText}>CHECK IT</Text>
-              </Pressable>
-              <Pressable style={st.sheetCancel} onPress={() => setManual(false)}>
+              </Press>
+              <Press style={st.sheetCancel} onPress={() => setManual(false)}>
                 <Text style={st.sheetCancelText}>Cancel</Text>
-              </Pressable>
+              </Press>
             </View>
           </View>
         </Modal>
@@ -331,36 +382,55 @@ export default function App() {
 const st = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
   center: { alignItems: 'center', justifyContent: 'center' },
-  boot: { color: C.text, fontSize: 34, fontWeight: '900', letterSpacing: 6 },
-  bootSub: { color: C.dim, marginTop: 10, fontSize: T.body },
+  boot: { color: C.text, fontSize: 38, fontWeight: '800', letterSpacing: -1.2 },
+  bootSub: { color: C.text3, marginTop: 12, fontSize: 14.5 },
 
-  signin: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
-  signinSub: { color: C.dim, fontSize: 14, lineHeight: 21, marginTop: 12, marginBottom: 28 },
-  crewRow: {
-    minHeight: GLOVE_TARGET, justifyContent: 'center', paddingHorizontal: 18,
-    backgroundColor: C.card, borderRadius: 12, marginBottom: 10,
+  signin: { flex: 1, justifyContent: 'center', paddingHorizontal: 22 },
+  signinSub: {
+    color: C.text2, fontSize: 15, lineHeight: 23, marginTop: 14, marginBottom: 30, maxWidth: 400,
   },
-  crewText: { color: C.text, fontSize: 18, fontWeight: '700' },
+  crewRow: {
+    minHeight: GLOVE_TARGET, flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1, borderTopColor: C.rule,
+  },
+  crewText: { color: C.text, fontSize: 19, fontWeight: '600', letterSpacing: T.trackTitle },
+  crewMark: { color: C.text3, fontSize: 17 },
 
+  /* Sheets are a surface arriving over the work, so they get a real edge and a
+     grab rail rather than a rounded floating panel. */
   sheetWrap: { flex: 1, backgroundColor: '#000000CC', justifyContent: 'flex-end' },
   sheet: {
-    backgroundColor: C.card, borderTopLeftRadius: 22, borderTopRightRadius: 22,
-    padding: 22, maxHeight: '78%',
+    backgroundColor: C.bg, borderTopWidth: 1, borderTopColor: C.ruleStrong,
+    paddingHorizontal: 22, paddingTop: 20, paddingBottom: 26, maxHeight: '80%',
   },
-  sheetTitle: { color: C.text, fontSize: 22, fontWeight: '800' },
-  sheetSub: { color: C.dim, fontSize: 13, marginTop: 8, marginBottom: 16, lineHeight: 19 },
-  zoneRow: { minHeight: GLOVE_TARGET, justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: C.line },
-  zoneRowText: { color: C.text, fontSize: 17, fontWeight: '600' },
+  grab: {
+    alignSelf: 'center', width: 40, height: 3, borderRadius: 2,
+    backgroundColor: C.ruleStrong, marginBottom: 18,
+  },
+  sheetTitle: { color: C.text, fontSize: 23, fontWeight: '700', letterSpacing: T.trackTitle },
+  sheetSub: { color: C.text3, fontSize: 13.5, marginTop: 8, marginBottom: 14, lineHeight: 20 },
+
+  zoneRow: {
+    minHeight: GLOVE_TARGET, flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1, borderTopColor: C.rule,
+  },
+  zoneRowText: { color: C.text, fontSize: 17, flex: 1 },
+  zoneCurrent: {
+    color: C.text3, fontSize: T.label, fontWeight: '700', letterSpacing: T.trackLabel,
+  },
 
   input: {
-    backgroundColor: C.bg, borderRadius: 12, borderWidth: 1, borderColor: C.line,
-    color: C.text, fontSize: 18, paddingHorizontal: 16, minHeight: GLOVE_TARGET, marginBottom: 12,
+    borderBottomWidth: 1, borderBottomColor: C.ruleStrong,
+    color: C.text, fontSize: 24, fontWeight: '700', letterSpacing: T.trackTitle,
+    minHeight: GLOVE_TARGET - 8, marginBottom: 14,
   },
   sheetBtn: {
-    minHeight: 80, borderRadius: 14, backgroundColor: C.accent,
-    alignItems: 'center', justifyContent: 'center', marginTop: 4,
+    minHeight: 84, borderRadius: 4, backgroundColor: C.text,
+    alignItems: 'center', justifyContent: 'center', marginTop: 8,
   },
-  sheetBtnText: { color: '#04101F', fontSize: 19, fontWeight: '900', letterSpacing: 2 },
+  sheetBtnText: { color: '#08080A', fontSize: 19, fontWeight: '800', letterSpacing: 0.8 },
   sheetCancel: { minHeight: 56, alignItems: 'center', justifyContent: 'center' },
-  sheetCancelText: { color: C.dim, fontSize: 14 },
+  sheetCancelText: { color: C.text3, fontSize: 15 },
 });

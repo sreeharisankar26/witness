@@ -60,3 +60,16 @@ desktop.ini
 .vscode/
 .idea/
 *.swp
+
+# Diagnostic output from tools/Diagnose.bat and tools/Verify.bat
+tools/diagnostic.txt
+tools/verify.txt
+tools/servercheck.txt
+tools/bench.txt
+tools/backtest.txt
+tools/modeltest.txt
+
+# Editor/agent tooling that happens to live in the tree. Not our source, and
+# shipping someone else's skill bundle inside a submission is confusing at best.
+.agents/
+skills-lock.json

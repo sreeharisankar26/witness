@@ -12,10 +12,11 @@ import * as SQLite from 'expo-sqlite';
 import { getAdapter } from './adapter';
 import type { RecordSnapshot, Ncr, Resolution, Zone } from '../engine/types';
 import {
-  installIdFor, ncrIdFor, SQL_ZONE_COVERAGE, SQL_SUPERSEDE_OUTBOX,
+  installIdFor, ncrIdFor, reportIdFor,
+  SQL_ZONE_COVERAGE, SQL_SUPERSEDE_OUTBOX, SQL_ZONE_REPORTS,
 } from './sql';
 
-export { installIdFor, ncrIdFor };
+export { installIdFor, ncrIdFor, reportIdFor };
 
 let _db: SQLite.SQLiteDatabase | null = null;
 
@@ -47,6 +48,11 @@ CREATE TABLE IF NOT EXISTS ncrs (
 CREATE TABLE IF NOT EXISTS installs (
   id TEXT PRIMARY KEY, serial TEXT, sku TEXT, zone_id TEXT,
   installed_at TEXT, verified_by TEXT, status TEXT
+);
+CREATE TABLE IF NOT EXISTS reports (
+  id TEXT PRIMARY KEY, serial TEXT, sku TEXT, zone_id TEXT,
+  kind TEXT NOT NULL, note TEXT, reported_by TEXT,
+  created_at TEXT NOT NULL, status TEXT
 );
 CREATE TABLE IF NOT EXISTS events (
   id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL,
@@ -149,7 +155,7 @@ export async function ensureSeeded(force = false): Promise<void> {
     // A refreshed record replaces the old one wholesale. Keeping half of each
     // is what produces numbers nobody can account for.
     if (force || reseeding) {
-      for (const t of ['units', 'submittals', 'revisions', 'ncrs', 'installs', 'events', 'outbox', 'zones']) {
+      for (const t of ['units', 'submittals', 'revisions', 'ncrs', 'installs', 'reports', 'events', 'outbox', 'zones']) {
         await db.runAsync(`DELETE FROM ${t}`);
       }
     }
@@ -306,6 +312,64 @@ export async function commitNcr(r: Resolution, confirmedBy: string): Promise<Ncr
   await enqueue('/ncr', ncr);
   await logEvent('NCR_CONFIRMED', ncr);
   return ncr;
+}
+
+/**
+ * A worker files a problem the record could never have known about.
+ *
+ * This is the one place in Witness where the worker is the authority rather
+ * than the record. No engine verdict is involved and none is implied: whether a
+ * part is cracked, or whether the wrong thing turned up on the pallet, is not
+ * derivable from the approved submittals. Only the person holding it knows.
+ *
+ * So it is stored as testimony, attributed and timestamped, and it never
+ * changes a verdict. What it CAN do is feed the delivery-level view — enough
+ * WRONG_ITEM reports on the same part at the same revision is a mis-order, and
+ * that inference is made in server/reorder.mjs where it can be tested.
+ */
+export type ReportKind = 'DAMAGED' | 'WRONG_ITEM' | 'OTHER';
+
+export interface WorkerReport {
+  id: string;
+  serial: string;
+  sku: string;
+  zone_id: string;
+  kind: ReportKind;
+  note: string;
+  reported_by: string;
+  created_at: string;
+  status: 'OPEN' | 'CLOSED';
+}
+
+export async function commitReport(
+  { serial, sku, zoneId }: { serial: string; sku: string; zoneId: string },
+  kind: ReportKind,
+  note: string,
+  reportedBy: string,
+): Promise<WorkerReport> {
+  const db = await openDb();
+  const report: WorkerReport = {
+    id: reportIdFor(zoneId, serial, kind),
+    serial, sku, zone_id: zoneId, kind,
+    note: note.trim(),
+    reported_by: reportedBy,
+    created_at: new Date().toISOString(),
+    status: 'OPEN',
+  };
+  await db.runAsync(
+    `INSERT OR REPLACE INTO reports VALUES (?,?,?,?,?,?,?,?,?)`,
+    report.id, report.serial, report.sku, report.zone_id, report.kind,
+    report.note, report.reported_by, report.created_at, report.status,
+  );
+  await enqueue('/report', report);
+  await logEvent('REPORT_FILED', report);
+  return report;
+}
+
+/** Worker notes already filed for a location. */
+export async function reportsForZone(zoneId: string): Promise<WorkerReport[]> {
+  const db = await openDb();
+  return db.getAllAsync<WorkerReport>(SQL_ZONE_REPORTS, zoneId);
 }
 
 /** A clean scan is field verification. The scan doubles as the sign-off. */

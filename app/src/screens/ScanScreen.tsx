@@ -9,18 +9,21 @@
  * code at all, which is why rung 2 exists and why it is the only place in
  * Witness where a model touches the flow.
  *
- * One button, bottom third, thumb-reachable. Camera opens on tap and closes the
- * instant it reads a tag - median session under eight seconds, which is what
- * keeps the phone cool and the battery alive across a shift.
+ * The layout is a readout, not a landing page: what the app currently believes
+ * — where you are, who you are, how old the record is, what has not synced —
+ * stated plainly in a column, with one enormous action at the bottom under the
+ * thumb. Nothing is centred, nothing floats in a card, and the only colour on
+ * screen belongs to a status that has earned it.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  View, Text, Pressable, StyleSheet, ActivityIndicator, Modal, Linking,
+  View, Text, Pressable, StyleSheet, ActivityIndicator, Modal, Linking, Animated,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
-import { C, T, GLOVE_TARGET } from '../theme';
+import { C, T, MONO, GLOVE_TARGET, SPRING } from '../theme';
+import Press from '../components/Press';
 import { parseTag, TagParseError } from '../engine/resolve';
 import type { ScannedTag } from '../engine/types';
 
@@ -105,75 +108,87 @@ export default function ScanScreen({
   // Permission denied is a dead end unless we say what to do about it.
   const denied = perm && !perm.granted && !perm.canAskAgain;
 
+  const statusColour = !online ? C.text3 : serverReachable ? C.ok : C.stop;
+  const statusText = !online ? 'OFFLINE' : serverReachable ? 'ONLINE' : 'NO SERVER';
+
   return (
     <View style={s.root}>
+      {/* ── header: where, and what the connection actually is ───────────── */}
       <View style={s.header}>
-        <Pressable onPress={onZonePress} hitSlop={16} style={s.zoneBtn}>
-          <Text style={s.zoneLabel}>WORKING IN</Text>
+        <Press style={s.zoneBtn} onPress={onZonePress} depth={0.99} hitSlop={16}>
+          <Text style={s.label}>WORKING IN</Text>
           <Text style={s.zoneName}>{zoneName}</Text>
-          <Text style={s.zoneChange}>tap to change</Text>
-        </Pressable>
+          <Text style={s.zoneChange}>Tap to change</Text>
+        </Press>
         {/* Three states, not two. "ONLINE" used to mean only that the radio was
             on, so the header could read ONLINE directly above "can't reach the
             server" — technically true, and useless. */}
         <View style={s.status}>
-          <View style={[s.dot, {
-            backgroundColor: !online ? C.dim : serverReachable ? C.ok : C.stop,
-          }]} />
-          <Text style={s.statusText}>
-            {!online ? 'OFFLINE' : serverReachable ? 'ONLINE' : 'NO SERVER'}
-          </Text>
-          {pending > 0 && <Text style={s.pending}>{pending} queued</Text>}
+          <View style={s.statusRow}>
+            <View style={[s.dot, { backgroundColor: statusColour }]} />
+            <Text style={s.statusText}>{statusText}</Text>
+          </View>
+          {pending > 0 && (
+            <Text style={[s.pending, MONO]}>{pending} queued</Text>
+          )}
         </View>
       </View>
 
+      <View style={s.rule} />
+
+      {/* ── the readout ──────────────────────────────────────────────────── */}
       <View style={s.middle}>
         <Pressable onLongPress={onReset} delayLongPress={2500}>
           <Text style={s.brand}>WITNESS</Text>
         </Pressable>
-        <Text style={s.prompt}>Scan the tag on the part{'\n'}before you fix it.</Text>
-        {/* Freshness is always on screen. A verdict from a stale record is the
-            most dangerous thing this app can produce, so we never hide its age. */}
-        <Text style={[s.synced, syncStale && { color: C.check }]}>
-          approved record {syncedLabel}
-        </Text>
-        <Text style={s.worker}>signed in as {worker}</Text>
+        <Text style={s.prompt}>Scan the tag on the part before you fix it.</Text>
+
+        <View style={s.facts}>
+          {/* Freshness is always on screen. A verdict from a stale record is the
+              most dangerous thing this app can produce, so we never hide its
+              age. */}
+          <Fact label="RECORD" value={syncedLabel} tone={syncStale ? C.check : undefined} />
+          <Fact label="SIGNED IN" value={worker} />
+        </View>
 
         {/* A queue that will not drain used to be silent. Now it says exactly
             where it is trying to post and what went wrong — that is the
             difference between a two-minute fix and an evening lost. */}
         {(pending > 0 || syncError) && (
-          <Pressable onPress={onTestSync} style={s.syncBox}>
+          <Press style={s.syncBox} onPress={onTestSync} depth={0.99}>
             <Text style={s.syncTitle}>
-              {syncError ? "CAN'T REACH THE SITE SERVER" : `${pending} waiting to sync`}
+              {syncError ? "CAN'T REACH THE SITE SERVER" : `${pending} WAITING TO SYNC`}
             </Text>
-            <Text style={s.syncBody}>{syncError || `sending to ${syncServer}`}</Text>
-            <Text style={s.syncHint}>tap to test the connection</Text>
-          </Pressable>
+            <Text style={s.syncBody}>{syncError || `Sending to ${syncServer}`}</Text>
+            <Text style={s.syncHint}>Tap to test the connection</Text>
+          </Press>
         )}
       </View>
 
+      {/* ── the action ───────────────────────────────────────────────────── */}
       {denied ? (
-        <Pressable style={[s.scanBtn, { backgroundColor: C.check }]}
-                   onPress={() => Linking.openSettings()}>
+        <Press style={[s.scanBtn, { backgroundColor: C.check }]}
+               onPress={() => Linking.openSettings()} depth={0.985}>
           <Text style={s.scanBtnText}>ENABLE CAMERA</Text>
-        </Pressable>
+        </Press>
       ) : (
-        <Pressable style={s.scanBtn} onPress={() => open('tag')} accessibilityLabel="Scan a part">
+        <Press style={s.scanBtn} onPress={() => open('tag')} depth={0.985}
+               accessibilityLabel="Scan a part">
           <Text style={s.scanBtnText}>SCAN</Text>
-        </Pressable>
+        </Press>
       )}
 
       <View style={s.ladder}>
-        <Pressable style={s.rung} onPress={() => open('plate')} hitSlop={8}>
+        <Press style={s.rung} onPress={() => open('plate')} depth={0.98}>
           <Text style={s.rungText}>No tag? Read the nameplate</Text>
-        </Pressable>
-        <Text style={s.rungDiv}>·</Text>
-        <Pressable style={s.rung} onPress={onManualEntry} hitSlop={8}>
+        </Press>
+        <View style={s.rungDivider} />
+        <Press style={s.rung} onPress={onManualEntry} depth={0.98}>
           <Text style={s.rungText}>Type it in</Text>
-        </Pressable>
+        </Press>
       </View>
 
+      {/* ── camera ───────────────────────────────────────────────────────── */}
       <Modal visible={mode !== 'closed'} animationType="fade"
              onRequestClose={() => setMode('closed')}>
         <View style={s.camWrap}>
@@ -186,14 +201,19 @@ export default function ScanScreen({
               onBarcodeScanned={mode === 'tag' ? handleTag : undefined}
             />
           ) : (
-            <View style={s.center}><ActivityIndicator color={C.accent} /></View>
+            <View style={s.center}><ActivityIndicator color={C.text} /></View>
           )}
 
-          <View style={[s.reticle, mode === 'plate' && { borderColor: C.accent }]}
-                pointerEvents="none" />
+          {/* Corner marks, not a full rectangle. They frame without covering,
+              and they read as a viewfinder rather than as a border. */}
+          <View style={s.reticle} pointerEvents="none">
+            {(['tl', 'tr', 'bl', 'br'] as const).map(k => (
+              <View key={k} style={[s.corner, s[k], badScan ? { borderColor: C.stop } : null]} />
+            ))}
+          </View>
 
           <View style={s.camTop}>
-            <Text style={s.camHint}>
+            <Text style={[s.camHint, badScan ? { color: C.stop } : null]}>
               {badScan ? badScan
                 : mode === 'tag' ? 'Hold the tag in the frame'
                   : 'Frame the nameplate — get close, keep it square'}
@@ -204,19 +224,19 @@ export default function ScanScreen({
           </View>
 
           <View style={s.camBottom}>
-            <Pressable style={s.camBtn} onPress={() => setTorch(t => !t)}>
+            <Press style={s.camBtn} onPress={() => setTorch(t => !t)}>
               <Text style={s.camBtnText}>{torch ? 'LIGHT ON' : 'LIGHT'}</Text>
-            </Pressable>
+            </Press>
             {mode === 'plate' && (
-              <Pressable style={[s.camBtn, s.shoot]} onPress={shootPlate} disabled={shooting}>
-                <Text style={[s.camBtnText, { color: '#04101F' }]}>
+              <Press style={[s.camBtn, s.shoot]} onPress={shootPlate} disabled={shooting}>
+                <Text style={[s.camBtnText, { color: '#08080A' }]}>
                   {shooting ? 'READING…' : 'READ PLATE'}
                 </Text>
-              </Pressable>
+              </Press>
             )}
-            <Pressable style={[s.camBtn, s.camCancel]} onPress={() => setMode('closed')}>
+            <Press style={s.camBtn} onPress={() => setMode('closed')}>
               <Text style={s.camBtnText}>CANCEL</Text>
-            </Pressable>
+            </Press>
           </View>
         </View>
       </Modal>
@@ -224,68 +244,98 @@ export default function ScanScreen({
   );
 }
 
+function Fact({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  return (
+    <View style={s.fact}>
+      <Text style={s.factLabel}>{label}</Text>
+      <Text style={[s.factValue, tone ? { color: tone } : null]}>{value}</Text>
+    </View>
+  );
+}
+
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.bg, paddingHorizontal: 20 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8 },
-  zoneBtn: { paddingVertical: 8 },
-  zoneLabel: { color: C.dim, fontSize: T.label, letterSpacing: 1.4, fontWeight: '700' },
-  zoneName: { color: C.text, fontSize: 20, fontWeight: '800', marginTop: 2 },
-  zoneChange: { color: C.accent, fontSize: 11, marginTop: 2 },
-  status: { alignItems: 'flex-end', paddingVertical: 8 },
-  dot: { width: 10, height: 10, borderRadius: 5, marginBottom: 4 },
-  statusText: { color: C.dim, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
-  pending: { color: C.check, fontSize: 11, marginTop: 2 },
+  root: { flex: 1, backgroundColor: C.bg, paddingHorizontal: 22 },
+
+  header: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'flex-start', paddingTop: 10, paddingBottom: 14,
+  },
+  zoneBtn: { paddingVertical: 2 },
+  label: { color: C.text3, fontSize: T.label, letterSpacing: T.trackLabel, fontWeight: '700' },
+  zoneName: {
+    color: C.text, fontSize: 21, fontWeight: '700', letterSpacing: T.trackTitle, marginTop: 5,
+  },
+  zoneChange: { color: C.text3, fontSize: 12, marginTop: 4 },
+
+  status: { alignItems: 'flex-end', paddingVertical: 2 },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  dot: { width: 7, height: 7, borderRadius: 4 },
+  statusText: { color: C.text2, fontSize: T.label, fontWeight: '700', letterSpacing: T.trackLabel },
+  pending: { color: C.check, fontSize: 12, marginTop: 6 },
+
+  rule: { height: 1, backgroundColor: C.rule },
 
   middle: { flex: 1, justifyContent: 'center' },
-  brand: { color: C.text, fontSize: 40, fontWeight: '900', letterSpacing: 6 },
-  prompt: { color: C.dim, fontSize: T.body, marginTop: 14, lineHeight: 24 },
-  synced: { color: C.dim, fontSize: 12, marginTop: 24, opacity: 0.8 },
-  worker: { color: C.dim, fontSize: 11, marginTop: 6, opacity: 0.6 },
-  syncBox: {
-    marginTop: 18, padding: 12, borderRadius: 10,
-    backgroundColor: '#00000055', borderLeftWidth: 3, borderLeftColor: C.check,
+  brand: {
+    color: C.text, fontSize: 42, fontWeight: '800', letterSpacing: -1.4,
   },
-  syncTitle: { color: C.check, fontSize: 11, fontWeight: '900', letterSpacing: 1.2 },
-  syncBody: { color: C.text, fontSize: 12, marginTop: 5, lineHeight: 17 },
-  syncHint: { color: C.dim, fontSize: 10.5, marginTop: 6 },
+  prompt: { color: C.text2, fontSize: 17, lineHeight: 25, marginTop: 12, maxWidth: 320 },
+
+  facts: { marginTop: 34, borderTopWidth: 1, borderTopColor: C.rule },
+  fact: {
+    flexDirection: 'row', alignItems: 'baseline', paddingVertical: 11,
+    borderBottomWidth: 1, borderBottomColor: C.rule,
+  },
+  factLabel: {
+    width: 92, color: C.text3, fontSize: T.label, fontWeight: '700', letterSpacing: T.trackLabel,
+  },
+  factValue: { flex: 1, color: C.text2, fontSize: 13.5 },
+
+  syncBox: {
+    marginTop: 22, paddingLeft: 14, paddingVertical: 4,
+    borderLeftWidth: 2, borderLeftColor: C.check,
+  },
+  syncTitle: { color: C.check, fontSize: T.label, fontWeight: '800', letterSpacing: T.trackLabel },
+  syncBody: { color: C.text, fontSize: 13, marginTop: 6, lineHeight: 19 },
+  syncHint: { color: C.text3, fontSize: 11.5, marginTop: 7 },
 
   scanBtn: {
-    height: 128, borderRadius: 20, backgroundColor: C.accent,
+    height: 120, borderRadius: 4, backgroundColor: C.text,
     alignItems: 'center', justifyContent: 'center',
   },
-  scanBtnText: { color: '#04101F', fontSize: 34, fontWeight: '900', letterSpacing: 4 },
+  scanBtnText: {
+    color: '#08080A', fontSize: 32, fontWeight: '800', letterSpacing: 1,
+  },
 
   ladder: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    minHeight: 56, marginBottom: 6, gap: 10,
+    minHeight: 58, marginBottom: 4,
   },
-  rung: { paddingVertical: 12, paddingHorizontal: 4 },
-  rungText: { color: C.dim, fontSize: 13, textDecorationLine: 'underline' },
-  rungDiv: { color: C.line, fontSize: 13 },
+  rung: { paddingVertical: 14, paddingHorizontal: 14 },
+  rungText: { color: C.text2, fontSize: 13.5 },
+  rungDivider: { width: 1, height: 15, backgroundColor: C.rule },
 
   camWrap: { flex: 1, backgroundColor: '#000' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  reticle: {
-    position: 'absolute', top: '26%', left: '10%', right: '10%', height: '36%',
-    borderWidth: 3, borderColor: '#FFFFFFAA', borderRadius: 18,
-  },
-  camTop: { position: 'absolute', top: 56, left: 0, right: 0, alignItems: 'center', gap: 6 },
-  camHint: {
-    color: '#fff', fontSize: 15, fontWeight: '600',
-    backgroundColor: '#000000AA', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8,
-  },
-  camSub: {
-    color: '#FFFFFFAA', fontSize: 11,
-    backgroundColor: '#00000088', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6,
-  },
+
+  reticle: { position: 'absolute', top: '25%', left: '9%', right: '9%', height: '38%' },
+  corner: { position: 'absolute', width: 30, height: 30, borderColor: '#FFFFFFCC' },
+  tl: { top: 0, left: 0, borderTopWidth: 2, borderLeftWidth: 2 },
+  tr: { top: 0, right: 0, borderTopWidth: 2, borderRightWidth: 2 },
+  bl: { bottom: 0, left: 0, borderBottomWidth: 2, borderLeftWidth: 2 },
+  br: { bottom: 0, right: 0, borderBottomWidth: 2, borderRightWidth: 2 },
+
+  camTop: { position: 'absolute', top: 58, left: 22, right: 22, gap: 7 },
+  camHint: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  camSub: { color: '#FFFFFF99', fontSize: 12 },
+
   camBottom: {
-    position: 'absolute', bottom: 40, left: 16, right: 16, flexDirection: 'row', gap: 10,
+    position: 'absolute', bottom: 38, left: 18, right: 18, flexDirection: 'row', gap: 10,
   },
   camBtn: {
-    flex: 1, minHeight: GLOVE_TARGET, borderRadius: 14, backgroundColor: '#FFFFFF22',
+    flex: 1, minHeight: GLOVE_TARGET, borderRadius: 4, backgroundColor: '#FFFFFF1C',
     alignItems: 'center', justifyContent: 'center',
   },
-  shoot: { flex: 1.6, backgroundColor: C.accent },
-  camCancel: { backgroundColor: '#FFFFFF11' },
-  camBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 1.2 },
+  shoot: { flex: 1.7, backgroundColor: C.text },
+  camBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 1.1 },
 });

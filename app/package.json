@@ -10,7 +10,9 @@
     "android": "expo run:android",
     "prebuild": "expo prebuild --platform android --clean",
     "doctor": "expo install --fix",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --experimental-sqlite --experimental-strip-types --test src/engine/resolve.test.ts src/data/sync.test.ts",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --experimental-sqlite --experimental-strip-types --test src/engine/resolve.test.ts src/data/sync.test.ts ../server/reorder.test.mjs ../server/ingest.test.mjs ../server/forecast.test.mjs",
+    "ingest": "node ../tools/ingest.mjs",
+    "modeltest": "node ../tools/modeltest.mjs",
     "seed": "python ../tools/make_seed.py",
     "tags": "python ../tools/make_qr_sheet.py"
   },

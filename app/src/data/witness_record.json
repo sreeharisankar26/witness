@@ -1,6 +1,6 @@
 {
   "_generated": "2026-08-12T16:04:58.184340+00:00",
-  "_note": "SYNTHETIC. Stands in for Kaya's approved submittal record. See app/src/data/adapter.ts.",
+  "_note": "Approved revisions INGESTED FROM DOCUMENTS by tools/ingest.mjs. Units, revisions and zones come from the supply-chain record.",
   "record_synced_at": "2026-08-08T06:40:00Z",
   "_record_synced_at_note": "overwritten at install time by the device",
   "project": {
@@ -302,344 +302,143 @@
   ],
   "submittals": [
     {
+      "id": "354825-001-SUB-001",
+      "sku": "GT-12",
+      "description": "Grout Termination Unit, 50mm",
+      "zone_id": "ZONE-A",
+      "approved_rev": "C",
+      "approved_date": "",
+      "doc_ref": "submittal-register-C-hanford-format.pdf",
+      "review_action": "APPROVED"
+    },
+    {
+      "id": "354825-001-SUB-002",
+      "sku": "GT-12",
+      "description": "Grout Termination Unit, 50mm",
+      "zone_id": "ZONE-B",
+      "approved_rev": "C",
+      "approved_date": "",
+      "doc_ref": "submittal-register-C-hanford-format.pdf",
+      "review_action": "APPROVED"
+    },
+    {
+      "id": "354825-001-SUB-003",
+      "sku": "VLV-22",
+      "description": "Isolation Valve, DN50 PN16",
+      "zone_id": "ZONE-D",
+      "approved_rev": "C",
+      "approved_date": "",
+      "doc_ref": "submittal-register-C-hanford-format.pdf",
+      "conditional": true,
+      "review_action": "APPROVED_AS_NOTED"
+    },
+    {
+      "id": "354825-001-SUB-005",
+      "sku": "PNL-08",
+      "description": "Distribution Panel, 400A",
+      "zone_id": "ZONE-D",
+      "approved_rev": "C",
+      "approved_date": "",
+      "doc_ref": "submittal-register-C-hanford-format.pdf",
+      "review_action": "APPROVED"
+    },
+    {
+      "id": "354825-001-SUB-006",
+      "sku": "DMP-05",
+      "description": "Fire Damper, 600x400",
+      "zone_id": "ZONE-C",
+      "approved_rev": "A",
+      "approved_date": "",
+      "doc_ref": "submittal-register-C-hanford-format.pdf",
+      "review_action": "APPROVED"
+    },
+    {
       "id": "SUB-0001",
       "sku": "GT-12",
       "description": "Grout Termination Unit, 50mm",
       "discipline": "Structural",
       "zone_id": "ZONE-A",
       "approved_rev": "C",
-      "approved_date": "2026-07-31",
-      "doc_ref": "SUB-0001-GT-12-RC.pdf"
+      "approved_date": "31-Jul-2026",
+      "doc_ref": "submittal-register-A.pdf",
+      "review_action": "APPROVED"
     },
     {
       "id": "SUB-0002",
-      "sku": "AHU-04",
-      "description": "Air Handling Unit, 4000 CMH",
-      "discipline": "Mechanical",
-      "zone_id": "ZONE-A",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0002-AHU-04-RD.pdf"
+      "sku": "GT-12",
+      "description": "Grout Termination Unit, 50mm",
+      "discipline": "Structural",
+      "zone_id": "ZONE-B",
+      "approved_rev": "C",
+      "approved_date": "31/07/2026",
+      "doc_ref": "submittal-register-A.pdf",
+      "review_action": "APPROVED"
     },
     {
       "id": "SUB-0003",
       "sku": "VLV-22",
-      "description": "Butterfly Valve, DN200 PN16",
-      "discipline": "Plumbing",
-      "zone_id": "ZONE-A",
+      "description": "Isolation Valve, DN50 PN16",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-B",
       "approved_rev": "C",
-      "approved_date": "2026-06-01",
-      "doc_ref": "SUB-0003-VLV-22-RC.pdf"
+      "approved_date": "2026-07-28",
+      "doc_ref": "submittal-register-A.pdf",
+      "review_action": "APPROVED"
     },
     {
       "id": "SUB-0004",
-      "sku": "PNL-08",
-      "description": "Distribution Panel, 400A TPN",
-      "discipline": "Electrical",
-      "zone_id": "ZONE-A",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0004-PNL-08-RD.pdf"
-    },
-    {
-      "id": "SUB-0005",
-      "sku": "PMP-31",
-      "description": "End-Suction Pump, 30 kW",
+      "sku": "AHU-04",
+      "description": "Air Handling Unit, 4000 CFM",
       "discipline": "Mechanical",
-      "zone_id": "ZONE-A",
+      "zone_id": "ZONE-C",
       "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0005-PMP-31-RD.pdf"
-    },
-    {
-      "id": "SUB-0006",
-      "sku": "FCU-17",
-      "description": "Fan Coil Unit, ceiling concealed",
-      "discipline": "Mechanical",
-      "zone_id": "ZONE-A",
-      "approved_rev": "C",
-      "approved_date": "2026-06-01",
-      "doc_ref": "SUB-0006-FCU-17-RC.pdf"
+      "approved_date": "28-Jul-2026",
+      "doc_ref": "submittal-register-A.pdf",
+      "review_action": "APPROVED"
     },
     {
       "id": "SUB-0007",
-      "sku": "DMP-05",
-      "description": "Fire Damper, 600x400",
-      "discipline": "Fire",
-      "zone_id": "ZONE-A",
-      "approved_rev": "B",
-      "approved_date": "2026-05-18",
-      "doc_ref": "SUB-0007-DMP-05-RB.pdf"
-    },
-    {
-      "id": "SUB-0008",
-      "sku": "CBL-90",
-      "description": "LV Cable Tray, 300mm perforated",
-      "discipline": "Electrical",
-      "zone_id": "ZONE-A",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0008-CBL-90-RD.pdf"
-    },
-    {
-      "id": "SUB-0009",
-      "sku": "SPR-14",
-      "description": "Sprinkler Head, pendent K80",
-      "discipline": "Fire",
-      "zone_id": "ZONE-A",
-      "approved_rev": "B",
-      "approved_date": "2026-05-18",
-      "doc_ref": "SUB-0009-SPR-14-RB.pdf"
-    },
-    {
-      "id": "SUB-0010",
-      "sku": "ISO-02",
-      "description": "Vibration Isolator, spring 25mm",
+      "sku": "VLV-22",
+      "description": "Isolation Valve, DN50 PN16",
       "discipline": "Mechanical",
-      "zone_id": "ZONE-A",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0010-ISO-02-RD.pdf"
+      "zone_id": "ZONE-D",
+      "approved_rev": "C",
+      "approved_date": "28-Jul-2026",
+      "doc_ref": "submittal-register-A.pdf",
+      "review_action": "APPROVED"
     },
     {
       "id": "SUB-0011",
-      "sku": "GT-12",
-      "description": "Grout Termination Unit, 50mm",
-      "discipline": "Structural",
-      "zone_id": "ZONE-B",
-      "approved_rev": "B",
-      "approved_date": "2026-05-18",
-      "doc_ref": "SUB-0011-GT-12-RB.pdf"
+      "sku": "AHU-04",
+      "description": "Air Handling Unit, 4000 CFM",
+      "discipline": "Mechanical",
+      "zone_id": "ZONE-A",
+      "approved_rev": "D",
+      "approved_date": "28-Jul-2026",
+      "doc_ref": "submittal-register-B.pdf",
+      "review_action": "APPROVED"
     },
     {
       "id": "SUB-0012",
       "sku": "AHU-04",
-      "description": "Air Handling Unit, 4000 CMH",
+      "description": "Air Handling Unit, 4000 CFM",
       "discipline": "Mechanical",
       "zone_id": "ZONE-B",
       "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0012-AHU-04-RD.pdf"
-    },
-    {
-      "id": "SUB-0013",
-      "sku": "VLV-22",
-      "description": "Butterfly Valve, DN200 PN16",
-      "discipline": "Plumbing",
-      "zone_id": "ZONE-B",
-      "approved_rev": "C",
-      "approved_date": "2026-06-01",
-      "doc_ref": "SUB-0013-VLV-22-RC.pdf"
+      "approved_date": "28-Jul-2026",
+      "doc_ref": "submittal-register-B.pdf",
+      "review_action": "APPROVED"
     },
     {
       "id": "SUB-0014",
       "sku": "PNL-08",
-      "description": "Distribution Panel, 400A TPN",
+      "description": "Distribution Panel, 400A",
       "discipline": "Electrical",
-      "zone_id": "ZONE-B",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0014-PNL-08-RD.pdf"
-    },
-    {
-      "id": "SUB-0015",
-      "sku": "DMP-05",
-      "description": "Fire Damper, 600x400",
-      "discipline": "Fire",
-      "zone_id": "ZONE-B",
-      "approved_rev": "B",
-      "approved_date": "2026-05-18",
-      "doc_ref": "SUB-0015-DMP-05-RB.pdf"
-    },
-    {
-      "id": "SUB-0016",
-      "sku": "CBL-90",
-      "description": "LV Cable Tray, 300mm perforated",
-      "discipline": "Electrical",
-      "zone_id": "ZONE-B",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0016-CBL-90-RD.pdf"
-    },
-    {
-      "id": "SUB-0017",
-      "sku": "SPR-14",
-      "description": "Sprinkler Head, pendent K80",
-      "discipline": "Fire",
-      "zone_id": "ZONE-B",
-      "approved_rev": "B",
-      "approved_date": "2026-05-18",
-      "doc_ref": "SUB-0017-SPR-14-RB.pdf"
-    },
-    {
-      "id": "SUB-0018",
-      "sku": "ISO-02",
-      "description": "Vibration Isolator, spring 25mm",
-      "discipline": "Mechanical",
-      "zone_id": "ZONE-B",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0018-ISO-02-RD.pdf"
-    },
-    {
-      "id": "SUB-0019",
-      "sku": "GT-12",
-      "description": "Grout Termination Unit, 50mm",
-      "discipline": "Structural",
-      "zone_id": "ZONE-C",
-      "approved_rev": "B",
-      "approved_date": "2026-05-18",
-      "doc_ref": "SUB-0019-GT-12-RB.pdf"
-    },
-    {
-      "id": "SUB-0020",
-      "sku": "AHU-04",
-      "description": "Air Handling Unit, 4000 CMH",
-      "discipline": "Mechanical",
-      "zone_id": "ZONE-C",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0020-AHU-04-RD.pdf"
-    },
-    {
-      "id": "SUB-0021",
-      "sku": "PNL-08",
-      "description": "Distribution Panel, 400A TPN",
-      "discipline": "Electrical",
-      "zone_id": "ZONE-C",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0021-PNL-08-RD.pdf"
-    },
-    {
-      "id": "SUB-0022",
-      "sku": "PMP-31",
-      "description": "End-Suction Pump, 30 kW",
-      "discipline": "Mechanical",
-      "zone_id": "ZONE-C",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0022-PMP-31-RD.pdf"
-    },
-    {
-      "id": "SUB-0023",
-      "sku": "FCU-17",
-      "description": "Fan Coil Unit, ceiling concealed",
-      "discipline": "Mechanical",
-      "zone_id": "ZONE-C",
-      "approved_rev": "C",
-      "approved_date": "2026-06-01",
-      "doc_ref": "SUB-0023-FCU-17-RC.pdf"
-    },
-    {
-      "id": "SUB-0024",
-      "sku": "DMP-05",
-      "description": "Fire Damper, 600x400",
-      "discipline": "Fire",
-      "zone_id": "ZONE-C",
-      "approved_rev": "B",
-      "approved_date": "2026-05-18",
-      "doc_ref": "SUB-0024-DMP-05-RB.pdf"
-    },
-    {
-      "id": "SUB-0025",
-      "sku": "CBL-90",
-      "description": "LV Cable Tray, 300mm perforated",
-      "discipline": "Electrical",
-      "zone_id": "ZONE-C",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0025-CBL-90-RD.pdf"
-    },
-    {
-      "id": "SUB-0026",
-      "sku": "SPR-14",
-      "description": "Sprinkler Head, pendent K80",
-      "discipline": "Fire",
-      "zone_id": "ZONE-C",
-      "approved_rev": "B",
-      "approved_date": "2026-05-18",
-      "doc_ref": "SUB-0026-SPR-14-RB.pdf"
-    },
-    {
-      "id": "SUB-0027",
-      "sku": "ISO-02",
-      "description": "Vibration Isolator, spring 25mm",
-      "discipline": "Mechanical",
-      "zone_id": "ZONE-C",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0027-ISO-02-RD.pdf"
-    },
-    {
-      "id": "SUB-0028",
-      "sku": "GT-12",
-      "description": "Grout Termination Unit, 50mm",
-      "discipline": "Structural",
-      "zone_id": "ZONE-D",
-      "approved_rev": "B",
-      "approved_date": "2026-05-18",
-      "doc_ref": "SUB-0028-GT-12-RB.pdf"
-    },
-    {
-      "id": "SUB-0029",
-      "sku": "AHU-04",
-      "description": "Air Handling Unit, 4000 CMH",
-      "discipline": "Mechanical",
-      "zone_id": "ZONE-D",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0029-AHU-04-RD.pdf"
-    },
-    {
-      "id": "SUB-0030",
-      "sku": "VLV-22",
-      "description": "Butterfly Valve, DN200 PN16",
-      "discipline": "Plumbing",
       "zone_id": "ZONE-D",
       "approved_rev": "C",
-      "approved_date": "2026-06-01",
-      "doc_ref": "SUB-0030-VLV-22-RC.pdf"
-    },
-    {
-      "id": "SUB-0031",
-      "sku": "PMP-31",
-      "description": "End-Suction Pump, 30 kW",
-      "discipline": "Mechanical",
-      "zone_id": "ZONE-D",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0031-PMP-31-RD.pdf"
-    },
-    {
-      "id": "SUB-0032",
-      "sku": "FCU-17",
-      "description": "Fan Coil Unit, ceiling concealed",
-      "discipline": "Mechanical",
-      "zone_id": "ZONE-D",
-      "approved_rev": "C",
-      "approved_date": "2026-06-01",
-      "doc_ref": "SUB-0032-FCU-17-RC.pdf"
-    },
-    {
-      "id": "SUB-0033",
-      "sku": "CBL-90",
-      "description": "LV Cable Tray, 300mm perforated",
-      "discipline": "Electrical",
-      "zone_id": "ZONE-D",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0033-CBL-90-RD.pdf"
-    },
-    {
-      "id": "SUB-0035",
-      "sku": "ISO-02",
-      "description": "Vibration Isolator, spring 25mm",
-      "discipline": "Mechanical",
-      "zone_id": "ZONE-D",
-      "approved_rev": "D",
-      "approved_date": "2026-06-15",
-      "doc_ref": "SUB-0035-ISO-02-RD.pdf"
+      "approved_date": "01-Aug-2026",
+      "doc_ref": "submittal-register-B.pdf",
+      "review_action": "APPROVED"
     }
   ],
   "units": [
@@ -1819,5 +1618,108 @@
       "rev": "B",
       "note": "NO APPROVED RECORD in Zone D - advisory path"
     }
-  ]
+  ],
+  "_ingest": {
+    "at": "2026-08-12T17:22:08.297Z",
+    "documents": [
+      {
+        "file": "L-895_Appendix_A_Rev_0.pdf",
+        "textVia": "built-in reader (no dependencies)",
+        "reader": "pattern extractor (model failed)",
+        "rows": 0,
+        "notes": 0,
+        "agreement": null
+      },
+      {
+        "file": "submittal-register-A.pdf",
+        "textVia": "built-in reader (no dependencies)",
+        "reader": "1x model (gemini-3.6-flash)",
+        "rows": 8,
+        "notes": 1,
+        "agreement": {
+          "reads": 1,
+          "rows": 8,
+          "disputedRows": 0,
+          "missedRows": 0,
+          "note": "single read — no cross-check possible"
+        }
+      },
+      {
+        "file": "submittal-register-B.pdf",
+        "textVia": "built-in reader (no dependencies)",
+        "reader": "pattern extractor (model failed)",
+        "rows": 5,
+        "notes": 0,
+        "agreement": null
+      },
+      {
+        "file": "submittal-register-C-hanford-format.pdf",
+        "textVia": "built-in reader (no dependencies)",
+        "reader": "pattern extractor (model failed)",
+        "rows": 6,
+        "notes": 1,
+        "agreement": null
+      }
+    ],
+    "stats": {
+      "read": 19,
+      "accepted": 13,
+      "held": 2,
+      "rejected": 4,
+      "notesFound": 2
+    },
+    "heldForReview": [
+      {
+        "id": "SUB-0006",
+        "sku": "DMP-15",
+        "reason": {
+          "code": "ZONE_UNKNOWN",
+          "detail": "no location given — an approval that does not say where cannot be applied"
+        }
+      },
+      {
+        "id": "SUB-0008",
+        "sku": "GT-l2",
+        "reason": {
+          "code": "SKU_UNKNOWN",
+          "detail": "\"GT-l2\" is not a part on this project — did you mean GT-12? (not applied automatically)"
+        }
+      }
+    ],
+    "rfisDrafted": 2,
+    "refused": [
+      {
+        "id": "354825-001-SUB-004",
+        "sku": "AHU-04",
+        "reason": {
+          "code": "NOT_APPROVED",
+          "detail": "review action \"C\" means revise and resubmit — this was never approved for installation"
+        }
+      },
+      {
+        "id": "SUB-0005",
+        "sku": "PNL-08",
+        "reason": {
+          "code": "NOT_APPROVED",
+          "detail": "review action \"PENDING\" means pending — this was never approved for installation"
+        }
+      },
+      {
+        "id": "SUB-0013",
+        "sku": "GT-12",
+        "reason": {
+          "code": "SUPERSEDED",
+          "detail": "superseded by SUB-0001 — \"SUB-0013 (GT-12 Rev B, Zone A) is SUPERSEDED BY SUB-0001 Rev C dated 31-Jul-2026.\""
+        }
+      },
+      {
+        "id": "SUB-0015",
+        "sku": "DMP-15",
+        "reason": {
+          "code": "NOT_APPROVED",
+          "detail": "review action \"REJECTED\" means rejected — this was never approved for installation"
+        }
+      }
+    ]
+  }
 }

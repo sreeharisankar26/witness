@@ -25,7 +25,7 @@
 
 import type {
   RecordSnapshot, Resolution, ScannedTag, MemoryWarning, Verdict, Authority,
-  IdentitySource,
+  IdentitySource, Unit, Submittal, Revision, Ncr,
 } from './types.ts';
 
 /** Beyond this, the cached approved record is no longer treated as binding. */
@@ -44,6 +44,87 @@ export const SYSTEMIC_THRESHOLD = 3;
 export const NAMEPLATE_MIN_CONFIDENCE = 0.55;
 
 export class TagParseError extends Error {}
+
+/* ── lookups ──────────────────────────────────────────────────────────────
+ *
+ * Every question this file asks of the record is "give me the one row matching
+ * this key". Written the obvious way that is `Array.find`, which is a full scan
+ * of the record per scan of a part — invisible on the 119-unit demo record and
+ * linear on a real one. Measured: p50 rose from 0.046 ms at 10,000 units to
+ * 0.444 ms at 100,000 (tools/bench.mjs). Never dangerous, but growing with the
+ * project, and a worker's phone is the slowest computer in the story.
+ *
+ * So the maps are built once and cached against the snapshot OBJECT, in a
+ * WeakMap. That choice does the invalidation for us: every write produces a new
+ * snapshot (loadSnapshot() re-reads), a new object gets a new index, and the old
+ * one is collected along with its maps. There is no cache to invalidate by hand
+ * and therefore no way to leave a stale one behind — which matters more here
+ * than the speed, because a stale index would mean ruling against a record that
+ * no longer exists.
+ *
+ * resolve() stays a pure function of its inputs: the index is derived entirely
+ * from the snapshot and changes no answer.
+ */
+interface SnapshotIndex {
+  unitBySerial: Map<string, Unit>;
+  submittalByKey: Map<string, Submittal>;        // `${sku}|${zone_id}`
+  revisionsBySku: Map<string, Map<string, Revision>>;
+  ncrsByKey: Map<string, Ncr[]>;                 // `${sku}|${zone_id}`, oldest first
+}
+
+const INDEX = new WeakMap<RecordSnapshot, SnapshotIndex>();
+
+const key2 = (a: string, b: string) => `${a}|${b}`;
+
+function indexOf(snapshot: RecordSnapshot): SnapshotIndex {
+  const cached = INDEX.get(snapshot);
+  if (cached) return cached;
+
+  const unitBySerial = new Map<string, Unit>();
+  // FIRST match wins, because that is what Array.find returned. A record with a
+  // duplicated serial must keep resolving to the same row it always did.
+  for (const u of snapshot.units) {
+    if (!unitBySerial.has(u.serial)) unitBySerial.set(u.serial, u);
+  }
+
+  const submittalByKey = new Map<string, Submittal>();
+  for (const s of snapshot.submittals) {
+    const k = key2(s.sku, s.zone_id);
+    if (!submittalByKey.has(k)) submittalByKey.set(k, s);
+  }
+
+  // LAST match wins here — the old code built `new Map(...)` from the filtered
+  // list, and the Map constructor keeps the last of any duplicate key. Matching
+  // the previous behaviour exactly is the point; changing it would be a silent
+  // change to which revision chain gets walked.
+  const revisionsBySku = new Map<string, Map<string, Revision>>();
+  for (const r of snapshot.revisions) {
+    let m = revisionsBySku.get(r.sku);
+    if (!m) { m = new Map(); revisionsBySku.set(r.sku, m); }
+    m.set(r.rev, r);
+  }
+
+  const ncrsByKey = new Map<string, Ncr[]>();
+  for (const n of snapshot.ncrs) {
+    const k = key2(n.sku, n.zone_id);
+    const list = ncrsByKey.get(k);
+    if (list) list.push(n); else ncrsByKey.set(k, [n]);
+  }
+  // Sorted once at build rather than on every memory lookup.
+  for (const list of ncrsByKey.values()) {
+    list.sort((a, b) => a.created_at.localeCompare(b.created_at));
+  }
+
+  const built: SnapshotIndex = { unitBySerial, submittalByKey, revisionsBySku, ncrsByKey };
+  INDEX.set(snapshot, built);
+  return built;
+}
+
+/** Exposed for the benchmark, so index build cost is measured, not assumed. */
+export function buildIndex(snapshot: RecordSnapshot): void {
+  INDEX.delete(snapshot);
+  indexOf(snapshot);
+}
 
 /**
  * Tag payload: "WTNS:1|GT-12|SN-4471"
@@ -100,9 +181,7 @@ function ageOf(syncedIso: string, nowIso: string): Age {
 export function supersededChain(
   snapshot: RecordSnapshot, sku: string, from: string, to: string,
 ): string[] {
-  const byRev = new Map(
-    snapshot.revisions.filter(r => r.sku === sku).map(r => [r.rev, r]),
-  );
+  const byRev = indexOf(snapshot).revisionsBySku.get(sku) ?? new Map<string, Revision>();
   const chain: string[] = [];
   const seen = new Set<string>([from]);
   let cur = byRev.get(from);
@@ -127,9 +206,7 @@ export function supersededChain(
 export function memoryFor(
   snapshot: RecordSnapshot, sku: string, zoneId: string,
 ): MemoryWarning | null {
-  const prior = snapshot.ncrs
-    .filter(n => n.sku === sku && n.zone_id === zoneId)
-    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const prior = indexOf(snapshot).ncrsByKey.get(key2(sku, zoneId)) ?? [];
 
   const units = new Set(prior.map(n => n.serial));
   if (units.size < MEMORY_THRESHOLD) return null;
@@ -190,9 +267,9 @@ export function resolve(
   // strong hint, not a compliance ruling.
   const perceived = source === 'NAMEPLATE';
 
-  const unit = snapshot.units.find(u => u.serial === tag.serial) ?? null;
-  const submittal =
-    snapshot.submittals.find(s => s.sku === tag.sku && s.zone_id === zoneId) ?? null;
+  const idx = indexOf(snapshot);
+  const unit = idx.unitBySerial.get(tag.serial) ?? null;
+  const submittal = idx.submittalByKey.get(key2(tag.sku, zoneId)) ?? null;
   const memory = memoryFor(snapshot, tag.sku, zoneId);
 
   const ageHours = Number.isFinite(age.hours) ? Math.round(age.hours * 10) / 10 : Infinity;

@@ -99,11 +99,38 @@ export async function readNameplate(base64Jpeg: string): Promise<NameplateReadin
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(`${BASE_URL}/chat/completions`, {
+    /**
+     * Two request shapes, because the free tiers a team can actually get are
+     * not all OpenAI-shaped. Anthropic's native API takes the image differently
+     * and authenticates with a different header; Google's Gemini exposes an
+     * OpenAI-compatible endpoint and so needs no special case. Detected from the
+     * URL rather than configured, because one more setting is one more thing to
+     * get wrong the night before a demo.
+     */
+    const anthropic = /api\.anthropic\.com/i.test(BASE_URL) || /\/v1\/messages\/?$/.test(BASE_URL);
+    const endpoint = anthropic
+      ? (/\/v1\/messages$/.test(BASE_URL) ? BASE_URL : `${BASE_URL.replace(/\/+$/, '')}/v1/messages`)
+      : (/\/chat\/completions$/.test(BASE_URL) ? BASE_URL : `${BASE_URL.replace(/\/+$/, '')}/chat/completions`);
+
+    const res = await fetch(endpoint, {
       method: 'POST',
       signal: ctl.signal,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${API_KEY}` },
-      body: JSON.stringify({
+      headers: anthropic
+        ? { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01' }
+        : { 'Content-Type': 'application/json', Authorization: `Bearer ${API_KEY}` },
+      body: JSON.stringify(anthropic ? {
+        model: MODEL,
+        temperature: 0,
+        max_tokens: 400,
+        system: SYSTEM,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Jpeg } },
+            { type: 'text', text: 'Read this nameplate.' },
+          ],
+        }],
+      } : {
         model: MODEL,
         temperature: 0,
         max_tokens: 400,
@@ -128,7 +155,9 @@ export async function readNameplate(base64Jpeg: string): Promise<NameplateReadin
     }
 
     const data = await res.json();
-    const text: string = data?.choices?.[0]?.message?.content ?? '';
+    const text: string = anthropic
+      ? (data?.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text).join('')
+      : data?.choices?.[0]?.message?.content ?? '';
     const parsed = extractJson(text);
 
     const sku = normalise(parsed.sku);

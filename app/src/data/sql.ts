@@ -34,6 +34,26 @@ export function ncrIdFor(zoneId: string, serial: string, installedRev: string): 
 }
 
 /**
+ * Report id, derived from the FINDING: this unit, in this place, this problem.
+ *
+ * Consistent with the two ids above, and for the same reason — the same worker
+ * re-opening the same crack on the same unit is one problem, not two, and two
+ * phones reporting it produce one row rather than a race.
+ *
+ * The cost of this choice, stated plainly: a second note about the SAME kind of
+ * problem on the SAME unit replaces the first rather than appending. That is
+ * the right trade for a queue that must not fill with duplicates, and the
+ * narrative field is where a worker adds detail.
+ */
+export function reportIdFor(zoneId: string, serial: string, kind: string): string {
+  return `RPT-${zoneId}-${serial}-${kind}`;
+}
+
+/** Worker-filed problems for a location, newest first. */
+export const SQL_ZONE_REPORTS = `
+  SELECT * FROM reports WHERE zone_id = ? ORDER BY created_at DESC`;
+
+/**
  * Coverage per zone, counted in DISTINCT UNITS.
  *
  * Never `COUNT(*)`. Rows can repeat for one physical unit — from a rescan, or

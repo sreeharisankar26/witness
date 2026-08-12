@@ -214,6 +214,82 @@ ncrs += [
      "confirmed_by": None, "narrative": "Coil spec superseded.", "status": "OPEN"},
 ]
 
+# ---------------------------------------------------------------------------
+# Worker reports.
+#
+# The one thing the approved record can never contain. A submittal knows which
+# revision was approved; it cannot know that this particular unit turned up with
+# a cracked housing, or that the pallet had the wrong pressure class on it.
+# Only the person holding the part knows that, so it arrives as testimony —
+# attributed, timestamped, and never an input to any verdict.
+#
+# Seeded thin on purpose. The interesting ones should be filed live from the
+# phone during the demo; these exist so the drill-down is not empty before
+# anyone has scanned anything.
+REPORTS = [
+    ("SN-4495", "AHU-04", "ZONE-C", "DAMAGED", "P. Singh", "2026-08-04T09:12:00Z",
+     "Coil fins crushed along one edge - looked like forklift damage in transit. Not fitted."),
+    ("SN-4512", "VLV-22", "ZONE-B", "DAMAGED", "M. Nair", "2026-08-05T14:40:00Z",
+     "Stem seized, will not turn by hand. Second one out of this crate."),
+    ("SN-4511", "VLV-22", "ZONE-B", "WRONG_ITEM", "A. Kumar", "2026-08-06T11:05:00Z",
+     "Flanged, drawing calls for threaded. Whole box is flanged."),
+    ("SN-4491", "GT-12", "ZONE-A", "OTHER", "S. Harisankar", "2026-08-07T08:20:00Z",
+     "Fits, but the anchor holes do not line up with the existing bracket. Worth a look before more go in."),
+]
+reports = [
+    {
+        "id": f"RPT-{zone}-{serial}-{kind}",
+        "serial": serial, "sku": sku, "zone_id": zone, "kind": kind,
+        "note": note, "reported_by": who, "created_at": when, "status": "OPEN",
+    }
+    for serial, sku, zone, kind, who, when, note in REPORTS
+]
+
+# ---------------------------------------------------------------------------
+# Every nonconformance must point at a unit that actually exists.
+#
+# It did not. The historical NCRs referenced SN-4402, SN-4418 and SN-4455, which
+# were never in the units table at all, and SN-4501/SN-4533, which were in it as
+# entirely different parts. So the record described five wrong installations
+# that, as far as the data was concerned, had never happened.
+#
+# Nothing in the app noticed, because the app only ever looks up a serial it has
+# just scanned. tools/backtest.mjs found it in one run: replaying the five
+# nonconformances through the engine produced three UNKNOWN_UNIT and two
+# TAG_CONFLICT, and a measured catch rate of zero. That is the value of testing a
+# claim rather than asserting it.
+#
+# A nonconformance says: this serial, of this part, at this revision, was fitted
+# where a different revision was approved. All four facts have to be in the
+# record or the record is not describing the same event.
+by_serial = {u["serial"]: u for u in units}
+for n in ncrs:
+    u = by_serial.get(n["serial"])
+    if u is None:
+        units.append({
+            "serial": n["serial"], "sku": n["sku"], "rev": n["installed_rev"],
+            "manufactured_date": "2026-02-01",
+            "_note": f"referenced by {n['id']} - a unit that was really fitted and torn out",
+        })
+    else:
+        # Present but describing a different part. The NCR is the record of what
+        # was physically there, so it wins.
+        u["sku"] = n["sku"]
+        u["rev"] = n["installed_rev"]
+
+# And the revision it was fitted at must be a revision that exists for that part,
+# otherwise the superseded chain has nothing to walk.
+known_revs = {(r["sku"], r["rev"]) for r in revisions}
+for n in ncrs:
+    if (n["sku"], n["installed_rev"]) not in known_revs:
+        revisions.append({
+            "id": f"REV-X-{n['sku']}-{n['installed_rev']}",
+            "sku": n["sku"], "rev": n["installed_rev"],
+            "superseded_by": n["approved_rev"], "approved_date": "2026-03-01",
+            "change_note": "superseded",
+        })
+        known_revs.add((n["sku"], n["installed_rev"]))
+
 seed = {
     "_generated": dt.datetime.now(dt.timezone.utc).isoformat(),
     "_note": "SYNTHETIC. Stands in for Kaya's approved submittal record. See app/src/data/adapter.ts.",
@@ -229,10 +305,31 @@ seed = {
     "units": sorted(units, key=lambda u: u["serial"]),
     "installs": installs,
     "ncrs": ncrs,
+    "reports": reports,
     "demo_tags": [{"serial": s, "sku": k, "rev": r, "note": n} for s, k, r, n in DEMO],
 }
 
 OUT.write_text(json.dumps(seed, indent=2))
 print(f"wrote {OUT}")
-for k in ("zones", "revisions", "submittals", "units", "installs", "ncrs"):
+for k in ("zones", "revisions", "submittals", "units", "installs", "ncrs", "reports"):
     print(f"  {k:12s} {len(seed[k])}")
+
+# Refuse to write a record that contradicts itself. A dangling nonconformance is
+# not a cosmetic flaw - it is the record claiming an event that its own data says
+# never happened, and it silently made the measured catch rate zero.
+_by_serial = {u["serial"]: u for u in seed["units"]}
+_bad = []
+for n in seed["ncrs"]:
+    u = _by_serial.get(n["serial"])
+    if u is None:
+        _bad.append(f"{n['id']} references {n['serial']}, which is not a unit")
+    elif u["sku"] != n["sku"]:
+        _bad.append(f"{n['id']} says {n['serial']} is {n['sku']}, units say {u['sku']}")
+    elif u["rev"] != n["installed_rev"]:
+        _bad.append(f"{n['id']} says {n['serial']} was fitted at Rev {n['installed_rev']}, units say Rev {u['rev']}")
+for r in seed["reports"]:
+    if r["serial"] not in _by_serial:
+        _bad.append(f"report {r['id']} references {r['serial']}, which is not a unit")
+if _bad:
+    raise SystemExit("SEED IS INCONSISTENT:\n  " + "\n  ".join(_bad))
+print("  consistency   every NCR and report references a real unit")

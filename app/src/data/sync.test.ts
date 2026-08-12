@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 
 import {
-  installIdFor, ncrIdFor,
+  installIdFor, ncrIdFor, reportIdFor,
   SQL_ZONE_COVERAGE, SQL_SUPERSEDE_OUTBOX, SQL_PENDING_OUTBOX,
   SQL_MARK_SYNCED, SQL_COUNT_PENDING,
 } from './sql.ts';
@@ -64,6 +64,17 @@ describe('derived ids', () => {
 
   test('a different revision is a different finding', () => {
     assert.notEqual(ncrIdFor('ZONE-A', 'SN-4471', 'B'), ncrIdFor('ZONE-A', 'SN-4471', 'A'));
+  });
+
+  test('a report id depends only on the unit, the place and the problem', () => {
+    assert.equal(reportIdFor('ZONE-A', 'SN-4471', 'DAMAGED'), 'RPT-ZONE-A-SN-4471-DAMAGED');
+  });
+
+  test('two different problems with one unit are two reports', () => {
+    assert.notEqual(
+      reportIdFor('ZONE-A', 'SN-4471', 'DAMAGED'),
+      reportIdFor('ZONE-A', 'SN-4471', 'WRONG_ITEM'),
+    );
   });
 
   test('ids carry no clock and no device — two phones agree', () => {
@@ -172,6 +183,25 @@ describe('the outbox', () => {
     const db = freshDb();
     enqueue(db, '/install', { serial: 'SN-1' });
     enqueue(db, '/install', { serial: 'SN-1' });
+    assert.equal(pending(db), 2);
+  });
+
+  test('a worker report queues and supersedes like everything else', () => {
+    const db = freshDb();
+    const id = reportIdFor('ZONE-A', 'SN-1', 'DAMAGED');
+    enqueue(db, '/report', { id, note: 'cracked housing' });
+    enqueue(db, '/report', { id, note: 'cracked housing, flange side' });
+    assert.equal(pending(db), 1, 'one problem with one unit is one report');
+    // The LATEST note is the one that ships — a worker adding detail must not
+    // have their correction sit behind the vaguer first attempt.
+    const row = db.prepare(SQL_PENDING_OUTBOX).all()[0] as any;
+    assert.equal(JSON.parse(row.payload_json).note, 'cracked housing, flange side');
+  });
+
+  test('damage and wrong-item on one unit are separate queue rows', () => {
+    const db = freshDb();
+    enqueue(db, '/report', { id: reportIdFor('ZONE-A', 'SN-1', 'DAMAGED') });
+    enqueue(db, '/report', { id: reportIdFor('ZONE-A', 'SN-1', 'WRONG_ITEM') });
     assert.equal(pending(db), 2);
   });
 

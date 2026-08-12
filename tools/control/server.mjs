@@ -14,8 +14,9 @@
  * Started by Witness.bat.
  */
 import { createServer } from 'node:http';
-import { spawn } from 'node:child_process';
+import { spawn, execSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, statSync } from 'node:fs';
+
 import { dirname, join, resolve as resolvePath, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { networkInterfaces, homedir } from 'node:os';
@@ -167,19 +168,152 @@ function sniff(name) {
 }
 
 // ─────────────────────────────────────────────────────────────── environment
+/**
+ * Which address does traffic to the internet actually leave from?
+ *
+ * Interface NAMES lie. A WSL or Hyper-V adapter can be called anything, and on
+ * this machine the real campus wifi sits on 172.24.x.x — a range that "looks
+ * virtual" to any heuristic based on the address alone. The routing table does
+ * not guess: whichever address owns the default route is the one a phone on the
+ * same network can reach. Everything else is ranking.
+ *
+ * Cached, because it is read on every poll and the answer changes only when the
+ * machine changes network — which we detect anyway.
+ */
+let routeCache = { at: 0, ip: '' };
+function defaultRouteIp() {
+  if (Date.now() - routeCache.at < 4000) return routeCache.ip;
+  let ip = '';
+  try {
+    if (isWin) {
+      const out = execSync('route print -4 0.0.0.0', { encoding: 'utf8', timeout: 4000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+      // "  0.0.0.0   0.0.0.0   172.24.64.1   172.24.67.28   30"
+      let best = Infinity;
+      for (const line of out.split(/\r?\n/)) {
+        const m = /^\s*0\.0\.0\.0\s+0\.0\.0\.0\s+(\S+)\s+(\d+\.\d+\.\d+\.\d+)\s+(\d+)/.exec(line);
+        if (m && Number(m[3]) < best) { best = Number(m[3]); ip = m[2]; }
+      }
+    } else {
+      const out = execSync("ip -4 route get 1.1.1.1 2>/dev/null || route -n get 1.1.1.1 2>/dev/null",
+        { encoding: 'utf8', timeout: 4000, stdio: ['ignore', 'pipe', 'ignore'] });
+      const m = /src\s+(\d+\.\d+\.\d+\.\d+)|interface:\s*\S+[\s\S]*?\n/.exec(out);
+      if (m && m[1]) ip = m[1];
+    }
+  } catch { /* no route, no network */ }
+  routeCache = { at: Date.now(), ip };
+  return ip;
+}
+
 function lanIps() {
   const out = [];
+  const routed = defaultRouteIp();
   for (const [iface, addrs] of Object.entries(networkInterfaces())) {
     for (const a of addrs || []) {
       if (a.family !== 'IPv4' || a.internal) continue;
       if (a.address.startsWith('169.254.')) continue;
-      const virt = /loopback|wsl|vethernet|virtualbox|vmware|hyper-v|docker|tailscale|zerotier/i.test(iface);
-      out.push({ iface, ip: a.address, wifi: /wi-?fi|wlan|wireless/i.test(iface), virt });
+      const virt = /loopback|wsl|vethernet|virtualbox|vmware|hyper-v|docker|tailscale|zerotier|radmin|hamachi/i.test(iface);
+      out.push({
+        iface, ip: a.address,
+        wifi: /wi-?fi|wlan|wireless/i.test(iface),
+        virt,
+        routed: a.address === routed,
+      });
     }
   }
-  // Real wifi first, virtual adapters last — but never hidden, in case the only
-  // usable network is an unusual one.
-  return out.sort((a, b) => Number(a.virt) - Number(b.virt) || Number(b.wifi) - Number(a.wifi));
+  // The routed address wins outright — it is a fact, not a guess. Then real
+  // wifi, then everything else. Nothing is hidden: the only usable network is
+  // sometimes an unusual one.
+  return out.sort((a, b) =>
+    Number(b.routed) - Number(a.routed) ||
+    Number(a.virt) - Number(b.virt) ||
+    Number(b.wifi) - Number(a.wifi));
+}
+
+/** The address to hand a phone, unless the operator picked another. */
+function bestIp() {
+  const list = lanIps();
+  return list.length ? list[0].ip : '';
+}
+
+/**
+ * Windows classifies every network as Public, Private or Domain, and on a
+ * PUBLIC network the firewall drops inbound connections regardless of what
+ * Node asks for. Campus and hotel wifi are classified Public by default, so
+ * the laptop works perfectly on localhost while the phone gets nothing —
+ * which reads exactly like an app bug and is not one.
+ */
+let netCache = { at: 0, val: null };
+function networkProfile() {
+  // Same shape on every platform. A partial object here is how the self-test
+  // came back as a 500 instead of a checklist.
+  if (!isWin) return { supported: false, name: '', category: '', iface: '', publicRisk: false };
+  if (Date.now() - netCache.at < 8000 && netCache.val) return netCache.val;
+  let val = { supported: true, name: '', category: '', publicRisk: false };
+  try {
+    const out = execSync(
+      'powershell -NoProfile -ExecutionPolicy Bypass -Command '
+      + '"Get-NetConnectionProfile | Where-Object {$_.IPv4Connectivity -ne \'NoTraffic\'} '
+      + '| Select-Object -First 1 -Property Name,NetworkCategory,InterfaceAlias '
+      + '| ForEach-Object { $_.Name + \'|\' + $_.NetworkCategory + \'|\' + $_.InterfaceAlias }"',
+      { encoding: 'utf8', timeout: 9000, windowsHide: true });
+    const [name, category, iface] = out.trim().split('|');
+    val = {
+      supported: true,
+      name: name || '',
+      category: category || '',
+      iface: iface || '',
+      publicRisk: /public/i.test(category || ''),
+    };
+  } catch { val.error = 'could not read'; }
+  netCache = { at: Date.now(), val };
+  return val;
+}
+
+const FW_RULES = ['Witness sync server (8787)', 'Witness Metro (8081-8090)'];
+
+/**
+ * Do our inbound rules exist, AND do they cover the network we are on?
+ *
+ * Existing is not enough. allow-firewall.bat creates them for private and
+ * domain profiles only — a deliberate choice, and the right one on a home
+ * network. On campus wifi, which Windows classifies Public, those rules are
+ * inert: they are listed, they look correct, and they let nothing through.
+ * Checking only for the rule NAMES reported a green tick over a phone that
+ * could not connect, which is worse than no check at all.
+ */
+let fwCache = { at: 0, val: null };
+function firewallRules() {
+  if (!isWin) return { supported: false, present: true, covers: true, names: [], profiles: {} };
+  if (Date.now() - fwCache.at < 8000 && fwCache.val) return fwCache.val;
+
+  const names = [], profiles = {};
+  for (const name of FW_RULES) {
+    try {
+      const out = execSync(`netsh advfirewall firewall show rule name="${name}"`,
+        { encoding: 'utf8', timeout: 6000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+      if (!/Rule Name:/i.test(out)) continue;
+      names.push(name);
+      const m = /^Profiles:\s*(.+)$/mi.exec(out);
+      profiles[name] = (m ? m[1] : '').trim();
+    } catch { /* no such rule */ }
+  }
+
+  const cat = networkProfile().category || '';
+  // "Any" covers everything; otherwise the current category must be listed.
+  const coversHere = names.length === FW_RULES.length && names.every(n => {
+    const p = (profiles[n] || '').toLowerCase();
+    return p.includes('any') || (cat && p.includes(cat.toLowerCase()));
+  });
+
+  const val = {
+    supported: true,
+    present: names.length === FW_RULES.length,
+    covers: coversHere,
+    names, profiles,
+    category: cat,
+  };
+  fwCache = { at: Date.now(), val };
+  return val;
 }
 
 const ENV_PATH = join(APP, '.env');
@@ -295,6 +429,11 @@ function writeEnv(patch) {
 
 EXPO_PUBLIC_SERVER_URL=${cur.EXPO_PUBLIC_SERVER_URL ?? ''}
 
+# Which approved record the app rules against.
+#   seed      the synthetic supply-chain record
+#   ingested  what tools/ingest.mjs read out of the submittal PDFs
+EXPO_PUBLIC_RECORD=${cur.EXPO_PUBLIC_RECORD || 'seed'}
+
 # Vision (nameplate reading) + phrasing. No verdict depends on either.
 EXPO_PUBLIC_LLM_URL=${cur.EXPO_PUBLIC_LLM_URL ?? ''}
 EXPO_PUBLIC_LLM_KEY=${cur.EXPO_PUBLIC_LLM_KEY ?? ''}
@@ -331,6 +470,50 @@ async function probe(url, ms = 1200) {
   const t = setTimeout(() => ctl.abort(), ms);
   try { return (await fetch(url, { signal: ctl.signal })).ok; }
   catch { return false; } finally { clearTimeout(t); }
+}
+
+async function getJson(url, ms = 1200) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: ctl.signal });
+    return r.ok ? await r.json() : null;
+  } catch { return null; } finally { clearTimeout(t); }
+}
+
+/** Newest mtime across the sync server's own source files, on disk right now. */
+function serverSrcStamp() {
+  let newest = 0;
+  for (const f of ['index.mjs', 'reorder.mjs', 'ingest.mjs', 'forecast.mjs', 'ensemble.mjs', 'rfi.mjs', 'model.mjs']) {
+    try { newest = Math.max(newest, statSync(join(ROOT, 'server', f)).mtimeMs); } catch { /* ignore */ }
+  }
+  return Math.round(newest);
+}
+
+/**
+ * Is the sync server that is ANSWERING older than the code on disk?
+ *
+ * This cost an afternoon. The panel treated "something is serving on 8787" as
+ * success and reused it, so after editing a route the dashboard called an
+ * endpoint that existed in the file and not in the running process. The symptom
+ * was a 404 from a route you could read the source of — which sends you looking
+ * for a bug in code that was already correct.
+ *
+ * Three states worth telling apart: nothing running, running the current code,
+ * running something older.
+ */
+async function syncServerState() {
+  const h = await getJson('http://localhost:8787/health');
+  if (!h) return { up: false, stale: false };
+  const disk = serverSrcStamp();
+  return {
+    up: true,
+    // A server with no stamp at all predates this check, so it is by definition old.
+    stale: typeof h.srcStamp !== 'number' || h.srcStamp < disk,
+    running: h.srcStamp ?? null,
+    onDisk: disk,
+    startedAt: h.startedAt ?? null,
+  };
 }
 
 /**
@@ -439,6 +622,137 @@ function which(cmd, args = ['--version']) {
   });
 }
 
+/**
+ * Start Metro, pinned to a known address.
+ *
+ * Left alone, Expo picks the address it will advertise in the exp:// URL by its
+ * own adapter scan — which can differ from the address we wrote into .env. The
+ * result is an app that loads its bundle from one address and then tries to
+ * sync with another, and only one of them is reachable. Whichever address the
+ * panel decided on, REACT_NATIVE_PACKAGER_HOSTNAME makes Expo agree with it.
+ */
+async function startMetro({ tunnel = false, host = '' } = {}) {
+  const port = await pickMetroPort();
+  const ip = host || (readEnv().EXPO_PUBLIC_SERVER_URL || '').replace(/^https?:\/\/([^:/]+).*$/, '$1') || bestIp();
+
+  const env = { ...easEnv() };
+  // Offline mode skips the account check that otherwise blocks a tokenless
+  // start on a project with an `owner`. Harmless when a token IS present.
+  if (!readToken()) env.EXPO_OFFLINE = '1';
+  if (!tunnel && ip) env.REACT_NATIVE_PACKAGER_HOSTNAME = ip;
+
+  const args = ['expo', 'start', '--port', String(port)];
+  if (tunnel) args.push('--tunnel'); else args.push('--host', 'lan');
+
+  const r = launch('expo', 'npx', args, { cwd: APP, env });
+
+  /**
+   * Do not wait for Expo to tell us the URL — compute it.
+   *
+   * The panel is not a terminal, so Expo runs non-interactively and never
+   * prints the QR block or the `exp://…` line; it only says "Waiting on
+   * http://localhost:8081". The old code scraped for `exp://`, so on this
+   * machine the QR simply never appeared, and whether it showed up at all
+   * depended on which Expo version happened to print what. We already decided
+   * the host and the port, so the URL is ours to state. sniff() still
+   * overwrites this if a real one turns up — which is what tunnel mode needs,
+   * because only ngrok knows that address.
+   */
+  if (!tunnel && ip) entry('expo').meta.expUrl = `exp://${ip}:${port}`;
+
+  say('expo', `— port ${port}${port === 8081 ? '' : ' (8081 was busy)'}${
+    tunnel ? ', tunnel mode' : ip ? `, advertising ${ip}` : ''} —`, 'cmd');
+  if (!tunnel && !ip) say('expo', '— no LAN address found; Expo will guess. Check wifi. —', 'err');
+  if (!readToken()) say('expo', '— no Expo token saved, starting offline (fine for Expo Go) —', 'cmd');
+  return { ...r, port, host: ip };
+}
+
+/**
+ * One press: from "nothing running" to "scan this code".
+ *
+ * Every step here is one the operator used to have to do in the right order,
+ * and getting the order wrong produced a different symptom each time. Freeing
+ * the ports first matters most — a Metro left over from the last run keeps a
+ * port and answers on it, so the phone connects to a stale bundle and the
+ * failure looks intermittent rather than structural.
+ */
+async function startEverything(pref = {}) {
+  const steps = [];
+  const note = (label, detail, ok = true) => steps.push({ label, detail, ok });
+
+  // 1. Stale processes from the last run.
+  stop('expo');
+  const freed = [];
+  for (const p of [8081, 8082, 8083, 8084, 19000, 19001]) {
+    const pids = await freePort(p);
+    if (pids.length) freed.push(`${p}`);
+  }
+  note('Cleared old dev servers', freed.length ? `freed port ${freed.join(', ')}` : 'nothing stale');
+
+  // 2. Sync server. Adopted only if it is running the code that is on disk —
+  //    an older process is worse than none, because it answers.
+  //
+  //    Deliberately BEFORE the network check. The dashboard talks to this over
+  //    localhost, so a laptop that is momentarily off the wifi should still get
+  //    a working supervisor view rather than nothing at all.
+  const sync = await syncServerState();
+  if (sync.up && !sync.stale) {
+    note('Sync server', 'already running on 8787, and current');
+  } else {
+    if (sync.up) say('server', '— the server on 8787 is older than the code on disk; restarting it —', 'cmd');
+    stop('server');
+    await freePort(8787);
+    await new Promise(r => setTimeout(r, 300));
+    launch('server', process.execPath, [join(ROOT, 'server', 'index.mjs')]);
+    let now = { up: false };
+    for (let i = 0; i < 25 && !now.up; i++) {
+      await new Promise(r => setTimeout(r, 400));
+      now = await syncServerState();
+    }
+    note('Sync server', now.up
+      ? (sync.up ? 'restarted on 8787 — it was running older code' : 'up on 8787')
+      : 'did not answer — see its log', now.up);
+  }
+
+  // 3. The address. Trust the routing table over anything remembered.
+  const ip = pref.ip || bestIp();
+  if (!ip) {
+    note('Find this PC on the network', 'no network adapter has an address — check wifi', false);
+    return {
+      ok: false,
+      error: 'This PC is not on a network, so the phone has nothing to connect to. '
+           + 'The sync server and dashboard are running on this laptop — join the wifi and press Start again for the phone.',
+      steps,
+    };
+  }
+  const serverUrl = `http://${ip}:8787`;
+  const before = readEnv().EXPO_PUBLIC_SERVER_URL || '';
+  writeEnv({ EXPO_PUBLIC_SERVER_URL: serverUrl });
+  note('Address written into the app', before && before !== serverUrl
+    ? `${ip} — changed from ${before.replace(/^https?:\/\//, '').replace(/:\d+$/, '')}`
+    : ip);
+
+  // 4. Metro, pinned to the same address.
+  const m = await startMetro({ tunnel: Boolean(pref.tunnel), host: ip });
+  if (m.ok === false) {
+    note('Start the app', m.error || 'failed', false);
+    return { ok: false, error: m.error, steps };
+  }
+  note('Starting the app', pref.tunnel ? 'tunnel mode — slower, but works on any network' : `Metro on port ${m.port}`);
+
+  // 5. Warn about the thing that will actually stop the phone.
+  const np = networkProfile();
+  fwCache = { at: 0, val: null };          // re-read: the operator may have just fixed it
+  const fw = firewallRules();
+  const blocked = !fw.covers && !pref.tunnel;
+
+  return {
+    ok: true, steps, ip, serverUrl,
+    healthUrl: `${serverUrl}/health`,
+    network: np, firewall: fw, blocked,
+  };
+}
+
 // ──────────────────────────────────────────────────────────────────── routes
 const json = (res, code, body) => {
   const s = JSON.stringify(body);
@@ -461,6 +775,10 @@ const MIME = {
 /** Files the panel is allowed to serve, by short name. */
 const SERVE = {
   dashboard: join(ROOT, 'dashboard', 'index.html'),
+  ingestreport: join(ROOT, 'docs', 'INGEST_REPORT.md'),
+  rfidrafts: join(ROOT, 'docs', 'RFI_DRAFTS.md'),
+  submittalA: join(ROOT, 'docs', 'submittals', 'submittal-register-A.pdf'),
+  submittalB: join(ROOT, 'docs', 'submittals', 'submittal-register-B.pdf'),
   tags: join(ROOT, 'witness_qr_tags.pdf'),
   readme: join(ROOT, 'README.md'),
   apk: join(ROOT, 'witness.apk'),
@@ -478,6 +796,13 @@ const ACTIONS = {
     '--experimental-sqlite', '--experimental-strip-types', '--test',
     join('src', 'engine', 'resolve.test.ts'),
     join('src', 'data', 'sync.test.ts'),
+    // The delivery-level inference makes a claim that costs money if wrong,
+    // so it is on the safety-critical side of the suite, not an extra.
+    join('..', 'server', 'reorder.test.mjs'),
+    // And the gate that decides what "approved" even means.
+    join('..', 'server', 'ingest.test.mjs'),
+    // The projection and the ensemble reconciliation.
+    join('..', 'server', 'forecast.test.mjs'),
   ], { cwd: APP }),
   install: () => launch('install', 'npm', ['install'], { cwd: APP }),
   // babel.config.js needs babel-preset-expo declared explicitly. It resolves
@@ -490,35 +815,35 @@ const ACTIONS = {
     raw: 'npx --yes expo install babel-preset-expo && npm install',
   }),
   doctor: () => launch('doctor', 'npx', ['expo', 'install', '--fix'], { cwd: APP, env: easEnv() }),
-  // If one is already serving, launching another just exits — say so instead.
+  // Adopt a running server only if it is the code on disk. See syncServerState.
   server: async () => {
-    if (await probe('http://localhost:8787/health')) {
-      say('server', '— a sync server is already running on 8787; using it —', 'cmd');
+    const s = await syncServerState();
+    if (s.up && !s.stale) {
+      say('server', '— a current sync server is already running on 8787; using it —', 'cmd');
       entry('server').status = 'done';
       return { ok: true, alreadyRunning: true };
     }
+    if (s.up) {
+      say('server', '— the server on 8787 is older than server/*.mjs; replacing it —', 'cmd');
+      stop('server');
+      await freePort(8787);
+      await new Promise(r => setTimeout(r, 300));
+    }
+    return launch('server', process.execPath, [join(ROOT, 'server', 'index.mjs')]);
+  },
+  restartServer: async () => {
+    stop('server');
+    await freePort(8787);
+    await new Promise(r => setTimeout(r, 400));
     return launch('server', process.execPath, [join(ROOT, 'server', 'index.mjs')]);
   },
   // EXPO_TOKEN is needed here too, not just for builds. Once `eas init` writes
   // an `owner` and project id into app.json, `expo start` verifies the session
-  // and otherwise stops on a login prompt it cannot show.
-  expo: async () => {
-    if (!readToken()) {
-      return { ok: false, error: 'Expo needs your access token to serve this project (app.json now has an owner). Paste it in the build card — Step 1 — then press Start app again.' };
-    }
-    const port = await pickMetroPort();
-    const r = launch('expo', 'npx', ['expo', 'start', '--port', String(port)],
-      { cwd: APP, env: easEnv() });
-    say('expo', `— panel chose port ${port} (8081 was ${port === 8081 ? 'free' : 'in use'}) —`, 'cmd');
-    return r;
-  },
-  expoTunnel: async () => {
-    const port = await pickMetroPort();
-    const r = launch('expo', 'npx', ['expo', 'start', '--tunnel', '--port', String(port)],
-      { cwd: APP, env: easEnv() });
-    say('expo', `— panel chose port ${port} (tunnel) —`, 'cmd');
-    return r;
-  },
+  // and otherwise stops on a login prompt it cannot show. Without a token we
+  // still start — in offline mode, which skips the check entirely — because a
+  // missing token is a worse reason to be stuck than a missing account.
+  expo: async () => startMetro({}),
+  expoTunnel: async () => startMetro({ tunnel: true }),
   // APK builds. Both run on THIS machine - the cloud one uploads the source to
   // Expo's builders, the local one needs Android Studio + JDK 17 installed.
   easWhoami: () => launch('build', 'npx', ['--yes', 'eas-cli', 'whoami'],
@@ -558,6 +883,11 @@ const ACTIONS = {
     '--output', join(ROOT, 'witness.apk')], { cwd: APP, env: easEnv() }),
   seed: () => launch('seed', PY, [join(ROOT, 'tools', 'make_seed.py')]),
   tags: () => launch('tags', PY, [join(ROOT, 'tools', 'make_qr_sheet.py')]),
+  // Reads the submittal PDFs into an approved record. Node core only, so it
+  // runs whether or not Python or poppler are installed.
+  ingest: () => launch('ingest', process.execPath, [join(ROOT, 'tools', 'ingest.mjs')], { cwd: ROOT }),
+  modelTest: () => launch('model', process.execPath, [join(ROOT, 'tools', 'modeltest.mjs')], { cwd: ROOT }),
+  makeSubmittals: () => launch('ingest', PY, [join(ROOT, 'tools', 'make_submittals.py')]),
 };
 
 createServer(async (req, res) => {
@@ -592,7 +922,8 @@ createServer(async (req, res) => {
 
     if (url.pathname === '/api/state') {
       const env = readEnv();
-      const serverUp = await probe('http://localhost:8787/health');
+      const sync = await syncServerState();
+      const serverUp = sync.up;
       const holders = await portPids(8081);
       const p8081Busy = await portInUse('127.0.0.1', 8081);
       const metroBusy = (holders.length > 0 || await portInUse('127.0.0.1', 8081))
@@ -607,10 +938,16 @@ createServer(async (req, res) => {
         installed: existsSync(join(APP, 'node_modules')),
         env: { ...env, EXPO_PUBLIC_LLM_KEY: env.EXPO_PUBLIC_LLM_KEY ? '••••••••' : '' },
         ips: lanIps(),
+        bestIp: bestIp(),
+        network: networkProfile(),
+        firewall: firewallRules(),
         serverUp,
+        sync,
         address: addressIsCurrent(),
         files: Object.fromEntries(Object.entries(SERVE).map(([k, v]) => [k, existsSync(v)])),
-        expUrl: entry('expo').meta.expUrl || null,
+        // Only while it is actually serving. A QR for a Metro that has exited
+        // sends the phone to a dead port and reads as a phone problem.
+        expUrl: entry('expo').child ? (entry('expo').meta.expUrl || null) : null,
         procs: Object.fromEntries([...procs].map(([k, v]) => [k, {
           status: v.status, running: Boolean(v.child), meta: v.meta,
         }])),
@@ -646,9 +983,11 @@ createServer(async (req, res) => {
       ]);
       const sdk = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT || '';
       const git = await which('git', ['--version']);
-      // "openjdk version \"17.0.9\"" / "java version \"11.0.31\""
-      const jv = /version \"?(\d+)/.exec(java.version || '');
-      const javaMajor = jv ? Number(jv[1]) : 0;
+      // "openjdk version \"17.0.9\"" / "java version \"1.8.0_401\"".
+      // Java 8 and earlier report as 1.8 — reading the first number alone gave
+      // "found Java 1", which is true of nothing and helps nobody.
+      const jv = /version \"?(\d+)(?:\.(\d+))?/.exec(java.version || '');
+      const javaMajor = jv ? (jv[1] === '1' ? Number(jv[2] || 0) : Number(jv[1])) : 0;
       const apk = join(ROOT, 'witness.apk');
       return json(res, 200, {
         tokenSet: Boolean(readToken()),
@@ -687,7 +1026,8 @@ createServer(async (req, res) => {
       const [node, npm, npx, py] = await Promise.all([
         which('node', ['-v']), which('npm', ['-v']), which('npx', ['-v']), which(PY, ['--version']),
       ]);
-      const serverUp = await probe('http://localhost:8787/health');
+      const sync = await syncServerState();
+      const serverUp = sync.up;
       const nodeMajor = Number(process.versions.node.split('.')[0]);
       let qrOk = false, qrErr = '';
       try { qrOk = toSvg('exp://127.0.0.1:8081').includes('<rect'); }
@@ -713,7 +1053,29 @@ createServer(async (req, res) => {
               ? `${addressIsCurrent().configured} is one of this PC's addresses`
               : `the app points at ${addressIsCurrent().configured}, but this PC is now ${addressIsCurrent().current.join(', ') || '(no network)'} — press Save settings and restart the app` },
         { name: 'Sync server reachable', ok: serverUp, detail: serverUp ? 'localhost:8787' : 'not running — press Start sync server' },
-        { name: 'Network address found', ok: lanIps().length > 0, detail: lanIps().map(i => `${i.ip} (${i.iface})`).join(', ') || 'none — check wifi' },
+        // A server answering with old code is the failure that looks like a bug
+        // in code you can read and see is correct.
+        { name: 'Sync server is running the current code', ok: !serverUp || !sync.stale,
+          detail: !serverUp ? 'not running'
+            : sync.stale
+              ? `it was started before server/*.mjs was last edited — press "Restart sync server". Routes added since it started will return 404.`
+              : `started ${sync.startedAt ? new Date(sync.startedAt).toLocaleTimeString() : ''}, matches the files on disk` },
+        { name: 'Network address found', ok: lanIps().length > 0, detail: lanIps().map(i => `${i.ip} (${i.iface})${i.routed ? ' ← routed' : ''}`).join(', ') || 'none — check wifi' },
+        // The two checks that explain almost every "the phone just won't
+        // connect". Both pass silently on a home network, which is why they
+        // were never noticed until the demo moved onto campus wifi.
+        { name: 'Network type', ok: true,
+          detail: networkProfile().category
+            ? `"${networkProfile().name}" is ${networkProfile().category}`
+            : 'not applicable' },
+        { name: 'Firewall lets your phone in', ok: firewallRules().covers,
+          detail: !firewallRules().supported
+            ? 'not applicable on this platform'
+            : !firewallRules().present
+              ? 'no Witness rules found — press "Let my phone in" (asks for administrator once)'
+              : firewallRules().covers
+                ? Object.entries(firewallRules().profiles).map(([n, p]) => `${n} → ${p}`).join(' | ')
+                : `the rules exist but only for ${Object.values(firewallRules().profiles).join(' / ')} — this network is ${firewallRules().category}, so they do nothing. Press "Let my phone in".` },
         { name: '.env written', ok: existsSync(ENV_PATH), detail: existsSync(ENV_PATH) ? (readEnv().EXPO_PUBLIC_SERVER_URL || '(no server url)') : 'press Save settings' },
       ] });
     }
@@ -723,6 +1085,49 @@ createServer(async (req, res) => {
       const fn = ACTIONS[action];
       if (!fn) return json(res, 400, { ok: false, error: `unknown action ${action}` });
       return json(res, 200, await fn());
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/start-all') {
+      return json(res, 200, await startEverything(await readBody(req)));
+    }
+
+    /**
+     * Open the two ports to the local subnet — and only the local subnet.
+     *
+     * Needs administrator rights, so it re-launches itself elevated and Windows
+     * shows the UAC prompt. Scoped with remoteip=localsubnet on purpose: this
+     * is a campus network, and "let my phone in" should not mean "let the
+     * building in". Deliberately does NOT reclassify the network as Private —
+     * that would also turn on discovery and sharing for every machine here.
+     */
+    if (req.method === 'POST' && url.pathname === '/api/fix-firewall') {
+      if (!isWin) return json(res, 200, { ok: false, error: 'Windows only' });
+      const rules = [
+        'netsh advfirewall firewall delete rule name=\\"Witness sync server (8787)\\"',
+        'netsh advfirewall firewall delete rule name=\\"Witness Metro (8081-8090)\\"',
+        'netsh advfirewall firewall add rule name=\\"Witness sync server (8787)\\" dir=in action=allow protocol=TCP localport=8787 remoteip=localsubnet profile=any',
+        'netsh advfirewall firewall add rule name=\\"Witness Metro (8081-8090)\\" dir=in action=allow protocol=TCP localport=8081-8090 remoteip=localsubnet profile=any',
+      ].join('; ');
+      try {
+        const child = spawn(
+          `powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process cmd -Verb RunAs -Wait -WindowStyle Hidden -ArgumentList '/c ${rules.replace(/\\"/g, '\\"')}'"`,
+          { shell: true, windowsHide: true });
+        const code = await new Promise(done => {
+          child.on('close', done);
+          child.on('error', () => done(-1));
+          setTimeout(() => done(-2), 60000);
+        });
+        fwCache = { at: 0, val: null };
+        const fw = firewallRules();
+        return json(res, 200, {
+          ok: fw.covers,
+          elevated: code === 0,
+          firewall: fw,
+          error: fw.covers ? '' : 'The rules were not added — the administrator prompt was probably declined. You can also right-click tools\\allow-firewall.bat and choose "Run as administrator".',
+        });
+      } catch (e) {
+        return json(res, 200, { ok: false, error: String(e?.message ?? e) });
+      }
     }
 
     if (req.method === 'POST' && url.pathname === '/api/free-ports') {
@@ -760,6 +1165,20 @@ createServer(async (req, res) => {
       const { token } = await readBody(req);
       writeToken(token);
       return json(res, 200, { ok: true, set: Boolean(readToken()) });
+    }
+
+    /** Which model paths are live right now. Read on every poll. */
+    if (url.pathname === '/api/modelstate') {
+      const e = readEnv();
+      const configured = Boolean(e.EXPO_PUBLIC_LLM_URL && e.EXPO_PUBLIC_LLM_KEY);
+      return json(res, 200, {
+        configured,
+        url: e.EXPO_PUBLIC_LLM_URL || '',
+        model: e.EXPO_PUBLIC_VLM_MODEL || e.EXPO_PUBLIC_LLM_MODEL || '',
+        paths: {
+          nameplate: configured, ingestion: configured, phrasing: configured,
+        },
+      });
     }
 
     if (req.method === 'POST' && url.pathname === '/api/env') {

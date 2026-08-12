@@ -106,6 +106,46 @@
     <div id="pathmsg" class="hint" style="margin:12px 0 0"></div>
   </div>
 
+  <!-- The whole point of the panel, in one press. Everything below it is for
+       when you want to do a single piece by hand. -->
+  <div class="card wide" style="border-color:var(--accent)">
+    <h2 style="color:var(--accent)">Get the phone connected</h2>
+    <p class="hint" style="margin-bottom:14px">
+      Clears anything left over from last time, finds the address this PC is
+      <i>actually</i> reachable on, writes it into the app, starts the sync
+      server, and starts Expo pinned to that same address. Then scan the code.
+    </p>
+    <div class="row">
+      <button class="primary" id="b-startall" style="font-size:17px;padding:17px"
+              onclick="startAll(false)">▶ &nbsp;Start everything</button>
+      <button class="ghost" style="flex:0 0 auto;min-width:230px" onclick="startAll(true)">
+        Start in tunnel mode</button>
+    </div>
+    <p class="hint" style="margin:9px 0 0">
+      Tunnel mode routes through the internet instead of the wifi. Slower to
+      start and the sync server stays unreachable, but it works on networks that
+      block phone-to-laptop traffic entirely.
+    </p>
+    <div id="startsteps" class="chk" style="display:none"></div>
+  </div>
+
+  <!-- Two conditions cause nearly every "it just won't connect", and neither is
+       visible from inside the app. -->
+  <div class="card wide" id="netcard" style="display:none;border-color:var(--warn)">
+    <h2 style="color:var(--warn)">⚠ This PC is refusing incoming connections</h2>
+    <div id="netbody" class="hint" style="margin-bottom:14px"></div>
+    <div class="row">
+      <button class="primary" onclick="fixFirewall()">Let my phone in</button>
+      <button class="ghost" style="flex:0 0 auto;min-width:200px" onclick="startAll(true)">Use tunnel mode instead</button>
+    </div>
+    <p class="hint" style="margin:10px 0 0">
+      "Let my phone in" asks Windows for administrator once, then opens ports
+      8787 and 8081–8090 <b>to this subnet only</b> — not to the internet, and
+      without reclassifying the network as Private.
+    </p>
+    <div id="fwmsg" class="hint" style="margin:10px 0 0"></div>
+  </div>
+
   <div class="card wide">
     <h2>Start here</h2>
     <ol class="steps" id="steps">
@@ -161,6 +201,19 @@
         <button class="good" onclick="view('dashboard')">Open dashboard</button>
         <button class="ghost" onclick="resetDemo()">Reset demo data</button>
       </div>
+      <div class="row" style="margin-top:9px">
+        <button class="ghost" onclick="run('restartServer')">Restart sync server</button>
+      </div>
+      <!-- A server answering with code from before your last edit is worse than
+           one that is down, because it answers. -->
+      <div id="stalewarn" style="display:none;margin-top:10px;background:#3A2606;color:#FFE1AE;
+           border-radius:10px;padding:11px 13px;font-size:12.5px;line-height:1.55">
+        <b>The running sync server is older than the code on disk.</b>
+        It was started before <code>server/</code> was last edited, so anything added
+        since — new routes, new fields — is not in it. The dashboard will show
+        <i>HTTP 404</i> for those.
+        <button class="ghost" style="margin-top:9px" onclick="run('restartServer')">Restart it now</button>
+      </div>
       <pre id="log-server"></pre>
       <button class="ghost" style="margin-top:9px" onclick="copyLog('log-server')">Copy log</button>
     </div>
@@ -187,9 +240,25 @@
       phone. Pick the network your phone is also on.</p>
       <label>This computer's address</label>
       <select id="ipsel" onchange="refresh()"></select>
-      <label>Model key <span style="text-transform:none;font-weight:600">— optional, enables nameplate reading</span></label>
-      <input id="llmurl" placeholder="API base URL, e.g. https://api.anthropic.com/v1" />
-      <input id="llmkey" type="password" placeholder="API key" style="margin-top:8px" />
+      <label>Model connection
+        <span id="modelstate" class="pill down" style="margin-left:8px"><i class="dot"></i>NOT SET</span>
+      </label>
+      <p class="hint" style="margin:0 0 10px">
+        Three things use a model: reading a nameplate when a part has no tag, reading
+        submittal documents, and phrasing a verdict out loud. <b>No verdict depends on
+        any of them</b> — but with nothing configured, none of them run.
+        <br><br>
+        Free and needs no card: <a href="https://aistudio.google.com/apikey" target="_blank"
+        style="color:var(--accent)">aistudio.google.com</a> → Create API key. Then press
+        the preset below and paste the key.
+      </p>
+      <button class="ghost" style="margin-bottom:8px" onclick="presetGemini()">
+        Use the free Google AI Studio preset</button>
+      <input id="llmurl" placeholder="API base URL" />
+      <input id="llmkey" type="password" placeholder="API key — paste it here" style="margin-top:8px" />
+      <input id="llmmodel" placeholder="Model, e.g. gemini-3.5-flash" style="margin-top:8px" />
+      <button class="ghost" style="margin-top:9px" onclick="run('modelTest')">Test the model connection</button>
+      <pre id="log-model"></pre>
       <button class="primary" style="margin-top:12px" onclick="saveEnv()">Save settings</button>
       <div id="envmsg" class="sub" style="margin-top:9px"></div>
 
@@ -213,12 +282,47 @@
         <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
           <div class="label" style="margin:0 0 8px">If the phone still cannot reach it</div>
           <p class="hint" style="margin:0 0 10px">Windows blocks incoming connections to Node by
-          default, so the laptop works and the phone gets nothing. Open the
-          <code>tools</code> folder, <b>right-click <code>allow-firewall.bat</code></b> and
-          choose <b>Run as administrator</b>.</p>
+          default, so the laptop works and the phone gets nothing. Use
+          <b>Let my phone in</b> at the top of this page — it asks for administrator
+          once and opens the ports to this subnet only. If you would rather run it
+          yourself, <b>right-click <code>allow-firewall.bat</code></b> in the
+          <code>tools</code> folder and choose <b>Run as administrator</b>.</p>
           <button class="ghost" onclick="openTools()">Open the tools folder</button>
         </div>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>Approved record — from documents</h2>
+      <p class="hint">Reads the submittal PDFs and builds the approved record from
+      them. A model reads the documents; <code>server/ingest.mjs</code> decides what
+      is allowed to become an approved revision. Rows that are still
+      <b>PENDING</b>, or that name a zone this project doesn't have, never make it in.</p>
+      <div class="stack">
+        <button class="good" onclick="runIngest()">Read the submittal documents</button>
+        <div class="row">
+          <button class="ghost" onclick="view('submittalA')">Register sheet 1</button>
+          <button class="ghost" onclick="view('submittalB')">Register sheet 2</button>
+        </div>
+        <div class="row">
+          <button class="ghost" onclick="view('ingestreport')">Ingestion report</button>
+          <button class="ghost" onclick="view('rfidrafts')">Drafted RFIs</button>
+        </div>
+        <button class="ghost" onclick="run('makeSubmittals')">Rebuild the sample documents</button>
+      </div>
+      <label>The app rules against</label>
+      <select id="recsel" onchange="saveRecord()">
+        <option value="seed">Seed — the synthetic supply-chain record</option>
+        <option value="ingested">Ingested — built from the submittal PDFs</option>
+      </select>
+      <div class="hint" style="margin-top:8px">
+        Switching this changes what the engine considers approved, so restart the
+        app afterwards. On the ingested record, parts whose submittal was held for
+        review correctly answer <b>NO APPROVED RECORD</b> instead of a confident
+        answer nobody signed off.
+      </div>
+      <pre id="log-ingest"></pre>
+      <button class="ghost" style="margin-top:9px" onclick="copyLog('log-ingest')">Copy log</button>
     </div>
 
     <div class="card">
@@ -411,6 +515,18 @@ async function refresh(){
   $('b-expo').disabled = Boolean(s.procs.expo?.running);
   $('b-server').disabled = Boolean(s.procs.server?.running);
 
+  const sw = $('stalewarn');
+  if(sw) sw.style.display = (s.sync && s.sync.up && s.sync.stale) ? '' : 'none';
+
+  // Belongs here, in refresh(), where the state response actually is.
+  const pw = $('portwarn');
+  if(pw){
+    pw.style.display = s.metroBusy ? '' : 'none';
+    const pp = $('portpids');
+    if(pp) pp.textContent = (s.port8081Holders && s.port8081Holders.length)
+      ? '(process ' + s.port8081Holders.join(', ') + ')' : '';
+  }
+
   if(s.expUrl){
     $('qrbox').style.display = 'flex';
     $('expurl').textContent = s.expUrl;
@@ -423,12 +539,50 @@ async function refresh(){
   if(sel.dataset.want !== want){
     sel.dataset.want = want;
     sel.innerHTML = s.ips.map(i=>
-      `<option value="http://${i.ip}:8787">${i.iface} — ${i.ip}${i.wifi?'  (wifi)':''}${i.virt?'  (virtual)':''}</option>`
+      `<option value="http://${i.ip}:8787">${i.iface} — ${i.ip}${
+        i.routed?'  ← this one':''}${i.wifi?'  (wifi)':''}${i.virt?'  (virtual)':''}</option>`
     ).join('') || '<option value="">No network found — check wifi</option>';
     const cur = s.env.EXPO_PUBLIC_SERVER_URL;
     if(cur && [...sel.options].some(o=>o.value===cur)) sel.value = cur;
   }
   if(document.activeElement !== $('llmurl')) $('llmurl').value = s.env.EXPO_PUBLIC_LLM_URL || '';
+  if(document.activeElement !== $('llmmodel'))
+    $('llmmodel').value = s.env.EXPO_PUBLIC_VLM_MODEL || s.env.EXPO_PUBLIC_LLM_MODEL || '';
+  const ms = $('modelstate');
+  if(ms){
+    const live = Boolean(s.env.EXPO_PUBLIC_LLM_URL && s.env.EXPO_PUBLIC_LLM_KEY);
+    ms.className = 'pill ' + (live ? 'up' : 'down');
+    ms.innerHTML = '<i class="dot"></i>' + (live ? 'CONFIGURED' : 'NOT SET — NO AI RUNS');
+  }
+  const rs = $('recsel');
+  if(rs && document.activeElement !== rs) rs.value = s.env.EXPO_PUBLIC_RECORD || 'seed';
+
+  // Windows' own two blockers, stated plainly. Neither is visible from inside
+  // the app, and both produce the identical symptom: the laptop works, the
+  // phone gets nothing.
+  const nc = $('netcard');
+  if(nc){
+    const fw = s.firewall || {};
+    const bad = fw.supported && !fw.covers;
+    nc.style.display = bad ? '' : 'none';
+    if(bad){
+      const bits = [];
+      if(s.network && s.network.name) bits.push('Your wifi <b>"' + s.network.name + '"</b> is classified <b>'
+        + (s.network.category || '?') + '</b> by Windows.');
+      if(!fw.present){
+        bits.push('No <b>Witness</b> firewall rules exist, so ports 8787 and 8081–8090 are '
+          + 'closed to your phone. The laptop works, the phone gets nothing — which reads '
+          + 'like an app bug and is not one.');
+      } else {
+        bits.push('The Witness firewall rules <b>do exist</b>, but only for <b>'
+          + [...new Set(Object.values(fw.profiles||{}))].join(' / ')
+          + '</b> networks. This one is <b>' + (fw.category||'?')
+          + '</b>, so those rules are inert — they are listed, they look right, and they let '
+          + 'nothing through. This is almost certainly why the phone connects only now and then.');
+      }
+      $('netbody').innerHTML = bits.join('<br><br>');
+    }
+  }
 
   // Loudly flag an address that no longer belongs to this machine.
   const aw = $('addrwarn');
@@ -464,8 +618,80 @@ async function refresh(){
   }
 }
 
+/* ── one-button start ───────────────────────────────────────────────────── */
+
+function renderSteps(steps){
+  const box = $('startsteps');
+  box.style.display = '';
+  box.innerHTML = steps.map(s =>
+    `<div class="${s.ok?'y':'n'}"><i>${s.ok?'✓':'✗'}</i><span>${s.label}</span><small>${
+      String(s.detail||'').replace(/[&<>]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[x]))}</small></div>`
+  ).join('');
+}
+
+async function startAll(tunnel){
+  const b = $('b-startall');
+  b.disabled = true;
+  const was = b.textContent;
+  b.textContent = tunnel ? 'Starting tunnel…' : 'Starting…';
+  $('startsteps').style.display = '';
+  $('startsteps').innerHTML = '<div style="color:var(--dim)">Working — this takes about ten seconds…</div>';
+  try{
+    const r = await api('/api/start-all', { tunnel: Boolean(tunnel) });
+    if(r.steps) renderSteps(r.steps);
+    if(!r.ok){ alertMsg('<b>Could not start:</b> ' + (r.error||'unknown error'), 'bad'); return; }
+    if(r.blocked){
+      alertMsg('Started — but <b>Windows is currently set to refuse incoming connections</b>, '
+        + 'so the phone will not reach this PC. See the orange card above.', 'warn');
+    } else {
+      alertMsg('Started. Scan the code in <b>Phone app</b> below with Expo Go. '
+        + 'If it stalls, scan the small health-check code first — that tests the network on its own.', 'good');
+    }
+  } finally {
+    b.disabled = false; b.textContent = was;
+  }
+}
+
+async function fixFirewall(){
+  $('fwmsg').innerHTML = 'Waiting for the Windows administrator prompt — it may be behind this window…';
+  const r = await api('/api/fix-firewall', {});
+  if(r.ok){
+    $('fwmsg').innerHTML = '<span style="color:var(--ok)">Done — the phone can reach this PC now. '
+      + 'Scan the health-check code to confirm.</span>';
+    alertMsg('Firewall opened to this subnet. Scan the health-check QR — it should say <code>{"ok":true}</code>.','good');
+  } else {
+    $('fwmsg').innerHTML = '<span style="color:var(--stop)">'+(r.error||'Failed')+'</span>';
+  }
+}
+
+async function runIngest(){
+  await run('ingest');
+  alertMsg('Reading the documents… the report opens when it finishes.','good');
+  setTimeout(()=>view('ingestreport'), 4000);
+}
+
+async function saveRecord(){
+  await api('/api/env', { EXPO_PUBLIC_RECORD: $('recsel').value });
+  flash('Saved. Restart the app — the record is loaded at startup.');
+}
+
+function presetGemini(){
+  $('llmurl').value = 'https://generativelanguage.googleapis.com/v1beta/openai';
+  $('llmmodel').value = 'gemini-3.5-flash';
+  alertMsg('Preset filled in. Paste your key above and press <b>Save settings</b>, then '
+    + '<b>Test the model connection</b>. Model names get retired — if that one is '
+    + 'refused, the test asks your key what it can use and prints the right name.','good');
+}
+
 async function saveEnv(){
-  const body = { EXPO_PUBLIC_SERVER_URL: $('ipsel').value, EXPO_PUBLIC_LLM_URL: $('llmurl').value };
+  const body = {
+    EXPO_PUBLIC_SERVER_URL: $('ipsel').value,
+    EXPO_PUBLIC_LLM_URL: $('llmurl').value,
+  };
+  if($('llmmodel').value){
+    body.EXPO_PUBLIC_LLM_MODEL = $('llmmodel').value;
+    body.EXPO_PUBLIC_VLM_MODEL = $('llmmodel').value;
+  }
   if($('llmkey').value) body.EXPO_PUBLIC_LLM_KEY = $('llmkey').value;
   await api('/api/env', body);
   $('llmkey').value = '';
@@ -531,17 +757,15 @@ async function buildCheck(){
   $('buildchk').innerHTML = d.checks.map(c =>
     `<div class="${c.ok?'y':'n'}"><i>${c.ok?'✓':'✗'}</i><span>${c.name}</span><small>${
       String(c.detail).replace(/[&<>]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[x]))}</small></div>`).join('');
-  const pw = $('portwarn');
-  if(pw){
-    pw.style.display = s.metroBusy ? '' : 'none';
-    const pp = $('portpids');
-    if(pp) pp.textContent = (s.port8081Holders && s.port8081Holders.length)
-      ? '(process ' + s.port8081Holders.join(', ') + ')' : '';
-  }
-  if(s.path){
-    $('pathcard').style.display = s.path.tooDeep ? '' : 'none';
-    $('pathlen').textContent = s.path.length;
-    $('pathdest').textContent = s.path.suggestion;
+  // These read from the buildcheck response `d`. They used to read a variable
+  // named `s` that does not exist in this scope — a ReferenceError thrown
+  // right here, which aborted the rest of the function, so the git and token
+  // badges never updated and the APK button never appeared. Nothing logged it
+  // because the throw happened inside an async handler nobody awaited.
+  if(d.path){
+    $('pathcard').style.display = d.path.tooDeep ? '' : 'none';
+    $('pathlen').textContent = d.path.length;
+    $('pathdest').textContent = d.path.suggestion;
   }
   const gs = $('gitstate');
   gs.className = 'pill ' + (d.gitRepo ? 'up' : 'down');
@@ -596,6 +820,7 @@ async function tick(){
     pumpLog('expo','log-expo'), pumpLog('server','log-server'),
     pumpLog('test','log-test'), pumpLog('install','log-test'), pumpLog('doctor','log-test'),
     pumpLog('seed','log-tags'), pumpLog('tags','log-tags'), pumpLog('build','log-build'),
+    pumpLog('ingest','log-ingest'), pumpLog('model','log-model'),
   ]);
 }
 tick(); setInterval(tick, 1200);

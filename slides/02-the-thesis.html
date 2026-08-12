@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Witness — slide 02 — the thesis</title>
+<!--
+  TITLE CARD for the narration:
+
+    "So here is our idea. And it is the thing I would want you to remember,
+     even if you forget everything else.
+     A model reads the world. It never rules on it."
+
+  ~12.5 seconds. This is the single most important frame in the video, so it
+  is also the emptiest. Three deliberate decisions:
+
+  1. NOTHING IS ON SCREEN for the first five and a half seconds beyond a rule
+     and a running head. "Remember this even if you forget everything else" is
+     a request for attention, and filling the frame while asking for attention
+     competes with the thing you are asking them to attend to. The empty sheet
+     is doing work.
+
+  2. THE TWO SENTENCES ARE DIVIDED BY A RULE that draws outward from the
+     centre. The thesis is that these are two different jobs done by two
+     separate systems; the card should be built the same way it argues.
+
+  3. EMPHASIS WITHOUT COLOUR. The supervisor view reserves colour for the
+     state of the work and never uses it as decoration, so this card does not
+     get to reach for red just because a line is important. Instead the first
+     line arrives in grey, and when the second lands the first dims further.
+     The pivot from grey to black IS the emphasis.
+
+  Record at 1920x1080. R replays, F freezes the end frame.
+-->
+<style>
+  :root{
+    --paper:#FBFAF7;
+    --ink:#15171A;
+    --ink-2:#55595F;
+    --ink-3:#8B9097;
+    --rule:#E4E0D8;
+    --rule-strong:#C9C3B8;
+    --settle:cubic-bezier(.22,1,.36,1);
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:#0E0F11;overflow:hidden}
+
+  #stage{
+    position:absolute;top:50%;left:50%;
+    width:1920px;height:1080px;transform-origin:50% 50%;
+    background:var(--paper);color:var(--ink);
+    font:400 16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-optical-sizing:auto;-webkit-font-smoothing:antialiased;overflow:hidden;
+  }
+
+  /* ── the sheet ─────────────────────────────────────────────────────────
+     Same three layers as slide 01, but the graticule is masked tighter and
+     turned down. A title card should feel like the cleanest sheet in the
+     stack, not the busiest. */
+  .sheet{position:absolute;inset:0;pointer-events:none}
+  .sheet-grid{
+    position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--rule) .5px, transparent .5px),
+      linear-gradient(90deg, var(--rule) .5px, transparent .5px),
+      linear-gradient(var(--rule-strong) .5px, transparent .5px),
+      linear-gradient(90deg, var(--rule-strong) .5px, transparent .5px);
+    background-size:12px 12px, 12px 12px, 120px 120px, 120px 120px;
+    opacity:.22;
+    -webkit-mask-image:radial-gradient(85% 75% at 50% 50%, #000 12%, transparent 80%);
+            mask-image:radial-gradient(85% 75% at 50% 50%, #000 12%, transparent 80%);
+    animation:drift 90s linear both;
+  }
+  @keyframes drift{ from{background-position:0 0,0 0,0 0,0 0}
+                    to  {background-position:0 12px,12px 0,0 120px,120px 0} }
+
+  .sheet-grain{
+    position:absolute;inset:0;opacity:.038;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .sheet-light{
+    position:absolute;inset:0;
+    background:radial-gradient(100% 70% at 50% -18%, #FFFFFF 0%, transparent 58%),
+               radial-gradient(70% 55% at 50% 118%, #EFE9DC 0%, transparent 62%);
+  }
+
+  .page{position:absolute;inset:0;padding:120px 140px}
+
+  /* running head — identical to slide 01, so the deck reads as one document */
+  .head{
+    display:flex;align-items:baseline;gap:20px;
+    font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+  }
+  .head b{font-weight:600;color:var(--ink-2);letter-spacing:.16em}
+  .head .dot{width:5px;height:5px;border-radius:50%;background:var(--rule-strong)}
+  .headrule{
+    height:1px;background:var(--ink);opacity:.16;margin-top:22px;
+    transform:scaleX(0);transform-origin:0 50%;
+  }
+
+  /* ── the thesis ────────────────────────────────────────────────────────
+     Optically centred rather than mathematically centred: shifted up a little,
+     because a block of type sitting on the true midline of a frame always
+     reads as slightly low. */
+  .thesis{
+    position:absolute;left:0;right:0;top:50%;
+    transform:translateY(-54%);
+    text-align:center;padding:0 140px;
+  }
+  .line{
+    font-weight:500;font-size:118px;line-height:1.06;letter-spacing:-.032em;
+  }
+  .line.a{color:var(--ink-2)}
+  .line.b{color:var(--ink)}
+
+  /* The division. Draws outward from the centre, so the frame is cut in two
+     rather than having a line placed on it. */
+  .divide{
+    width:520px;height:1px;margin:52px auto;
+    background:var(--ink);opacity:.22;
+    transform:scaleX(0);transform-origin:50% 50%;
+  }
+
+  /* ── the footnote ──────────────────────────────────────────────────────
+     Arrives last and stays small. It is the same claim restated as an
+     engineering constraint, for the judge who wants the mechanism rather than
+     the slogan. */
+  .foot{
+    position:absolute;left:0;right:0;bottom:120px;text-align:center;
+    font-size:22px;color:var(--ink-3);letter-spacing:-.002em;
+  }
+  .foot b{font-weight:500;color:var(--ink-2)}
+
+  /* ── animation ─────────────────────────────────────────────────────────
+     Every delay is a beat in the narration. The long silence between 1.4s and
+     5.6s is not an oversight. */
+  @keyframes rise{ from{opacity:0;transform:translateY(26px)} to{opacity:1;transform:none} }
+  @keyframes fade{ from{opacity:0} to{opacity:1} }
+  @keyframes draw{ from{transform:scaleX(0)} to{transform:scaleX(1)} }
+  @keyframes drawOp{ from{transform:scaleX(0);opacity:0} to{transform:scaleX(1);opacity:.22} }
+  /* Once the ruling lands, the perception half steps back. */
+  @keyframes recede{ from{opacity:1} to{opacity:.42} }
+
+  .run .head     {animation:fade   700ms var(--settle)  200ms both}
+  .run .headrule {animation:draw   900ms var(--settle)  420ms both}
+
+  .run .line.a   {animation:rise   950ms var(--settle) 5600ms both,
+                            recede 900ms var(--settle) 8900ms forwards}
+  .run .divide   {animation:drawOp 760ms var(--settle) 8200ms both}
+  .run .line.b   {animation:rise   950ms var(--settle) 8900ms both}
+  .run .foot     {animation:rise   900ms var(--settle)11400ms both}
+
+  /* A still frame instead of a sequence. Scoped to .page so the sheet layers
+     keep their own opacities - forcing them to 1 would turn the paper tooth
+     into visible static. */
+  .frozen .page, .frozen .page *{animation:none!important;opacity:1!important;transform:none!important}
+  .frozen .headrule{opacity:.16!important}
+  .frozen .divide{opacity:.22!important}
+  .frozen .line.a{opacity:.42!important}
+  .frozen .thesis{transform:translateY(-54%)!important}
+
+  @media (prefers-reduced-motion:reduce){
+    .run *{animation-duration:1ms!important;animation-delay:0ms!important}
+  }
+
+  #hint{
+    position:fixed;left:14px;bottom:12px;z-index:9;
+    font:400 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+    color:#6C7176;letter-spacing:.04em;
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div class="sheet">
+    <div class="sheet-grid"></div>
+    <div class="sheet-light"></div>
+    <div class="sheet-grain"></div>
+  </div>
+
+  <div class="page">
+    <div class="head">
+      <b>Witness</b>
+      <span class="dot"></span>
+      <span>The idea</span>
+    </div>
+    <div class="headrule"></div>
+
+    <div class="thesis">
+      <div class="line a">A model reads the world.</div>
+      <div class="divide"></div>
+      <div class="line b">It never rules on it.</div>
+    </div>
+
+    <div class="foot">
+      Perception is a model. A compliance ruling is a pure function.
+      <b>No model sits anywhere on that path.</b>
+    </div>
+  </div>
+</div>
+
+<div id="hint">R replay &nbsp;·&nbsp; F freeze on the end frame &nbsp;·&nbsp; 1920×1080</div>
+
+<script>
+  /* Fit 1920x1080 into whatever window this is opened in. What you record is
+     pixel-identical at any window size; only the resolution changes. */
+  const stage = document.getElementById('stage');
+  const fit = () => {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    stage.style.transform = `translate(-50%,-50%) scale(${s})`;
+  };
+  addEventListener('resize', fit); fit();
+
+  const play = () => {
+    stage.classList.remove('run', 'frozen');
+    void stage.offsetWidth;              // force a reflow so the animations restart
+    stage.classList.add('run');
+  };
+  const freeze = () => {
+    stage.classList.remove('run');
+    stage.classList.add('frozen');
+  };
+
+  addEventListener('keydown', e => {
+    if (e.key === 'r' || e.key === 'R') play();
+    if (e.key === 'f' || e.key === 'F') freeze();
+  });
+  addEventListener('click', play);
+
+  play();
+</script>
+</body>
+</html>

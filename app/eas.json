@@ -10,7 +10,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_SERVER_URL": "http://192.168.0.103:8787"
+        "EXPO_PUBLIC_SERVER_URL": "http://192.168.1.5:8787"
       }
     },
     "development": {
@@ -20,7 +20,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_SERVER_URL": "http://192.168.0.103:8787"
+        "EXPO_PUBLIC_SERVER_URL": "http://192.168.1.5:8787"
       }
     },
     "production": {

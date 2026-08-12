@@ -1,0 +1,52 @@
+WITNESS BACKTEST  2026-08-12T16:05:36.787Z
+record: ./app/src/data/witness_seed.json
+
+  NONCONFORMANCES THAT REALLY HAPPENED
+  5 in this record. For each, what would the engine have said at the point of install?
+
+   CAUGHT   NCR-0028   GT-12    SN-4402   ZONE-A   -> MISMATCH_SUPERSEDED (BINDING)
+   CAUGHT   NCR-0029   GT-12    SN-4418   ZONE-A   -> MISMATCH_SUPERSEDED (BINDING)
+   CAUGHT   NCR-0030   GT-12    SN-4455   ZONE-A   -> MISMATCH_SUPERSEDED (BINDING)
+   CAUGHT   NCR-0031   VLV-22   SN-4501   ZONE-B   -> MISMATCH_SUPERSEDED (BINDING)
+   CAUGHT   NCR-0032   AHU-04   SN-4533   ZONE-C   -> MISMATCH_SUPERSEDED (BINDING)
+
+   caught 5 of 5  =  100%
+
+  THE OTHER HALF
+  4 units were installed correctly and signed off. How many would it have stopped?
+
+   0 false alarms. It stopped nothing that was right.
+
+  WHAT THAT IS WORTH
+
+  On a $10M project, applying the published rework range and
+  THIS measured catch rate rather than an assumed one:
+
+   rework at 5% (low end of the range)
+     $500K rework  ->  ~$250K version-linked  ->  $250K at a 100% catch rate
+   rework at 15% (high end)
+     $1500K rework  ->  ~$750K version-linked  ->  $750K at a 100% catch rate
+
+  The catch rate above is measured on this project's own record. The 5-15%
+  rework range and the "about half is version-linked" split are industry
+  figures we did not measure and should not pretend to have. Only one of the
+  three numbers in that chain is ours.
+
+  WHAT THIS DOES NOT MEASURE
+
+  * Sample size. 5 nonconformances is not a rate, it is an
+    indication. A percentage from single figures should be read as "it caught
+    the ones we have" and nothing stronger.
+  * The record is synthetic. A real pilot would replay a contractor's own
+    closed NCR log, which is the measurement that would actually settle this.
+  * Whole classes of defect are invisible to it BY DESIGN. Witness compares an
+    identity and a revision against an approved record. It cannot see bad
+    workmanship, a part fitted the wrong way round, a correct revision
+    installed in the wrong place by a worker who set the zone wrongly, or a
+    part with no tag that nobody chose to scan. Those are not misses. They are
+    outside what this system claims to do, and a version of it that claimed
+    otherwise would be worse, not better.
+  * It assumes the part was scanned. Coverage is a separate problem from
+    accuracy, and the dashboard measures it separately for that reason.
+
+  SUMMARY  catch 100%  ·  false alarms 0/4  ·  5 nonconformances replayed

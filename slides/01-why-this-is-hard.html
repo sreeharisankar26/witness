@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Witness — slide 01 — why this is hard</title>
+<!--
+  FILLER SLIDE for the narration:
+
+    "Let me show you why that is hard. And why nobody has solved it.
+     On any construction site, the right answer already exists.
+     Somebody approved it, weeks ago, in an office. It is written down."
+
+  ~14.4 seconds (SRT cues 3-5). The sequence below is timed to land the stamp
+  on "somebody approved it" and to finish settling before "it is written down".
+
+  The rule this slide obeys: the narration is the argument, the slide is the
+  evidence. So there is almost no prose on screen. What is on screen is the
+  thing being described - an approved register row, stamped, dated weeks ago -
+  because showing the document is a stronger version of saying "it is written
+  down" than the words are.
+
+  Same material as the supervisor view: warm paper, drafting graticule, ink.
+  No floating cards, no glow, no accent colour used as decoration.
+
+  Record it at 1920x1080. The stage is fixed at that size and scaled to fit
+  whatever window you open it in, so what you record is pixel-exact regardless.
+
+  Press R or click to replay. Press F to freeze at the end state if you want a
+  still frame instead.
+-->
+<style>
+  :root{
+    --paper:#FBFAF7;
+    --ink:#15171A;
+    --ink-2:#55595F;
+    --ink-3:#8B9097;
+    --rule:#E4E0D8;
+    --rule-strong:#C9C3B8;
+    --ok:#1A7346;
+    --stop:#B3261E;
+
+    /* One spring, used for everything that arrives. Consistency in motion is
+       what makes a sequence feel authored rather than assembled. */
+    --settle:cubic-bezier(.22,1,.36,1);
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:#0E0F11;overflow:hidden}
+
+  /* The recording surface. Fixed 1920x1080, scaled by JS to fit the window. */
+  #stage{
+    position:absolute;top:50%;left:50%;
+    width:1920px;height:1080px;
+    transform-origin:50% 50%;
+    background:var(--paper);color:var(--ink);
+    font:400 16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-optical-sizing:auto;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+
+  /* ── the sheet ─────────────────────────────────────────────────────────
+     Identical construction to the supervisor view: graticule, tooth, light.
+     Every value sits at the edge of perception. If you can see a layer AS a
+     texture, it is turned up too far. */
+  .sheet{position:absolute;inset:0;pointer-events:none}
+  .sheet-grid{
+    position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--rule) .5px, transparent .5px),
+      linear-gradient(90deg, var(--rule) .5px, transparent .5px),
+      linear-gradient(var(--rule-strong) .5px, transparent .5px),
+      linear-gradient(90deg, var(--rule-strong) .5px, transparent .5px);
+    background-size:12px 12px, 12px 12px, 120px 120px, 120px 120px;
+    opacity:.30;
+    -webkit-mask-image:radial-gradient(120% 100% at 30% 20%, #000 30%, transparent 88%);
+            mask-image:radial-gradient(120% 100% at 30% 20%, #000 30%, transparent 88%);
+    /* Drifts a single module over the whole slide. Not a motion effect - it
+       stops the grid reading as a static wallpaper on a long hold. */
+    animation:drift 60s linear both;
+  }
+  @keyframes drift{ from{background-position:0 0,0 0,0 0,0 0}
+                    to  {background-position:0 12px,12px 0,0 120px,120px 0} }
+
+  .sheet-grain{
+    position:absolute;inset:0;opacity:.038;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .sheet-light{
+    position:absolute;inset:0;
+    background:radial-gradient(110% 80% at 18% -12%, #FFFFFF 0%, transparent 55%),
+               radial-gradient(90% 70% at 104% 6%, #F6EFE2 0%, transparent 52%),
+               radial-gradient(80% 60% at 50% 120%, #EFE9DC 0%, transparent 60%);
+  }
+
+  .num{font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum" 1}
+
+  /* ── layout ────────────────────────────────────────────────────────────
+     A single 120px module, same as the graticule, so nothing is placed by eye. */
+  .page{position:absolute;inset:0;padding:120px 140px}
+
+  /* running head */
+  .head{
+    display:flex;align-items:baseline;gap:20px;
+    font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+  }
+  .head b{font-weight:600;color:var(--ink-2);letter-spacing:.16em}
+  .head .dot{width:5px;height:5px;border-radius:50%;background:var(--rule-strong)}
+
+  /* The rule under the running head draws itself. A line that arrives by being
+     drawn reads as a document being set; the same line fading in reads as a
+     web page loading. */
+  .headrule{
+    height:1px;background:var(--ink);opacity:.16;margin-top:22px;
+    transform:scaleX(0);transform-origin:0 50%;
+  }
+
+  h1{
+    margin:76px 0 0;font-weight:500;font-size:104px;line-height:1.02;
+    letter-spacing:-.028em;max-width:1180px;
+  }
+  h1 .l{display:block;overflow:hidden}
+  h1 .l span{display:block}
+  h1 em{font-style:normal;color:var(--ink)}
+
+  .sub{
+    margin-top:34px;font-size:26px;line-height:1.45;color:var(--ink-2);
+    max-width:760px;letter-spacing:-.006em;
+  }
+
+  /* ── the register extract ──────────────────────────────────────────────
+     Set as a ruled table on the sheet, not as a card floating above it. The
+     whole point is that this is a document that already exists. */
+  .register{
+    position:absolute;right:140px;bottom:150px;width:900px;
+  }
+  .reglabel{
+    font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding-bottom:14px;border-bottom:1px solid var(--rule-strong);
+  }
+  table{width:100%;border-collapse:collapse;font-size:22px}
+  th{
+    text-align:left;font-weight:500;font-size:13px;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--ink-3);
+    padding:18px 0 12px;border-bottom:1px solid var(--rule);
+  }
+  td{padding:19px 0;border-bottom:1px solid var(--rule);color:var(--ink-2)}
+  tr.key td{color:var(--ink);font-weight:500}
+  td.rev{font-size:24px;letter-spacing:.02em}
+  .status{
+    font-size:13px;letter-spacing:.13em;text-transform:uppercase;font-weight:600;
+  }
+  .status.ok{color:var(--ok)}
+  .status.pend{color:var(--ink-3);font-weight:500}
+
+  /* Rows arrive one at a time, from underneath their own rule, so the table
+     appears to be written rather than pasted. */
+  .register tr{opacity:0;transform:translateY(10px)}
+
+  /* ── the stamp ─────────────────────────────────────────────────────────
+     Lands on "somebody approved it". Overprints the table edge, slightly off
+     square, because a stamp applied by a hand is never square. */
+  .stamp{
+    position:absolute;left:-80px;bottom:96px;
+    border:3px solid var(--ok);border-radius:4px;
+    padding:16px 26px 14px;
+    color:var(--ok);text-align:center;
+    transform:rotate(-7deg) scale(1.9);opacity:0;
+    /* Ink on a rough sheet is never perfectly opaque. */
+    mix-blend-mode:multiply;
+    box-shadow:0 0 0 6px rgba(251,250,247,.55);
+  }
+  .stamp .w{font-size:34px;font-weight:700;letter-spacing:.14em}
+  .stamp .d{font-size:15px;letter-spacing:.13em;margin-top:5px;opacity:.85}
+
+  /* ── the quiet counterweight ───────────────────────────────────────────
+     Bottom-left. The only line of prose, and it arrives last, because it is
+     the sentence the narration is about to land on. */
+  .foot{
+    position:absolute;left:140px;bottom:150px;max-width:620px;
+    padding-top:26px;border-top:1px solid var(--ink);
+  }
+  .foot .k{font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+  .foot .v{margin-top:14px;font-size:30px;line-height:1.35;letter-spacing:-.008em}
+  .foot .v b{font-weight:600}
+
+  /* ── animation ─────────────────────────────────────────────────────────
+     Every delay below is a beat in the narration. Change the narration, change
+     these, and nothing else. */
+  @keyframes rise{ from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }
+  @keyframes riseS{ from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+  @keyframes draw{ from{transform:scaleX(0)} to{transform:scaleX(1)} }
+  @keyframes fade{ from{opacity:0} to{opacity:1} }
+  @keyframes press{
+    /* Overshoots past its resting size and settles back, the way a stamp
+       rocks once when the hand lifts. */
+      0%{opacity:0;transform:rotate(-14deg) scale(1.9);filter:blur(3px)}
+     55%{opacity:1;transform:rotate(-5.6deg) scale(.965);filter:blur(0)}
+     78%{transform:rotate(-7.6deg) scale(1.012)}
+    100%{opacity:1;transform:rotate(-7deg) scale(1);filter:blur(0)}
+  }
+
+  .run .head        {animation:fade  700ms var(--settle)  200ms both}
+  .run .headrule    {animation:draw  900ms var(--settle)  420ms both}
+  .run h1 .l1 span  {animation:rise  900ms var(--settle) 1100ms both}
+  .run h1 .l2 span  {animation:rise  900ms var(--settle) 1240ms both}
+  .run .sub         {animation:rise  800ms var(--settle) 1700ms both}
+
+  .run .reglabel    {animation:riseS 700ms var(--settle) 4200ms both}
+  .run thead tr     {animation:riseS 600ms var(--settle) 4500ms both}
+  .run tbody tr:nth-child(1){animation:riseS 600ms var(--settle) 4900ms both}
+  .run tbody tr:nth-child(2){animation:riseS 600ms var(--settle) 5250ms both}
+  .run tbody tr:nth-child(3){animation:riseS 600ms var(--settle) 5600ms both}
+
+  .run .stamp       {animation:press 820ms var(--settle) 7900ms both}
+  .run .foot        {animation:rise  900ms var(--settle)10600ms both}
+
+  /* A still frame instead of a sequence: everything already landed.
+     Scoped to .page on purpose - forcing opacity:1 on the sheet layers would
+     turn the paper tooth into visible static. */
+  .frozen .page, .frozen .page *{animation:none!important;opacity:1!important;transform:none!important}
+  .frozen .stamp{transform:rotate(-7deg)!important}
+  .frozen .headrule{transform:scaleX(1)!important;opacity:.16!important}
+
+  @media (prefers-reduced-motion:reduce){
+    .run *{animation-duration:1ms!important;animation-delay:0ms!important}
+  }
+
+  /* Only visible to you, never in frame - it sits outside the stage. */
+  #hint{
+    position:fixed;left:14px;bottom:12px;z-index:9;
+    font:400 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+    color:#6C7176;letter-spacing:.04em;
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div class="sheet">
+    <div class="sheet-grid"></div>
+    <div class="sheet-light"></div>
+    <div class="sheet-grain"></div>
+  </div>
+
+  <div class="page">
+    <div class="head">
+      <b>Witness</b>
+      <span class="dot"></span>
+      <span>The problem</span>
+    </div>
+    <div class="headrule"></div>
+
+    <h1>
+      <span class="l l1"><span>The right answer</span></span>
+      <span class="l l2"><span>already exists.</span></span>
+    </h1>
+
+    <p class="sub">Every project runs on a register of approved submittals.
+      Somebody read the drawings, made a ruling, and signed it.</p>
+
+    <div class="foot">
+      <div class="k">Where it lives</div>
+      <div class="v">A PDF, in a folder, on a laptop,<br /><b>in the site trailer.</b></div>
+    </div>
+
+    <div class="register">
+      <div class="reglabel">
+        <span>Submittal register &nbsp;·&nbsp; Level 2 mechanical</span>
+        <span class="num">Rev 4 &nbsp;·&nbsp; sheet 1 of 6</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:190px">Ref</th>
+            <th>Item</th>
+            <th style="width:130px">Zone</th>
+            <th style="width:90px">Rev</th>
+            <th style="width:150px">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="key">
+            <td class="num">SUB-0412</td>
+            <td>GT-12 grille assembly</td>
+            <td>Zone A</td>
+            <td class="rev">C</td>
+            <td><span class="status ok">Approved</span></td>
+          </tr>
+          <tr>
+            <td class="num">SUB-0413</td>
+            <td>VLV-22 balancing valve</td>
+            <td>Zone A</td>
+            <td class="rev">B</td>
+            <td><span class="status ok">Approved</span></td>
+          </tr>
+          <tr>
+            <td class="num">SUB-0418</td>
+            <td>DMP-05 fire damper</td>
+            <td>Zone B</td>
+            <td class="rev">A</td>
+            <td><span class="status pend">Pending</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="stamp">
+        <div class="w">APPROVED</div>
+        <div class="d num">14 WEEKS AGO</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="hint">R replay &nbsp;·&nbsp; F freeze on the end frame &nbsp;·&nbsp; 1920×1080</div>
+
+<script>
+  /* Fit 1920x1080 into whatever window this is opened in, without ever
+     changing the composition. Recording the window at any size gives the same
+     frame; only the resolution differs. */
+  const stage = document.getElementById('stage');
+  const fit = () => {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    stage.style.transform = `translate(-50%,-50%) scale(${s})`;
+  };
+  addEventListener('resize', fit); fit();
+
+  const play = () => {
+    stage.classList.remove('run', 'frozen');
+    void stage.offsetWidth;              // force a reflow so the animations restart
+    stage.classList.add('run');
+  };
+  const freeze = () => {
+    stage.classList.remove('run');
+    stage.classList.add('frozen');
+  };
+
+  addEventListener('keydown', e => {
+    if (e.key === 'r' || e.key === 'R') play();
+    if (e.key === 'f' || e.key === 'F') freeze();
+  });
+  addEventListener('click', play);
+
+  play();
+</script>
+</body>
+</html>

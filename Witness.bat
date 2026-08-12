@@ -36,6 +36,19 @@ if %NODEMAJOR% LSS 22 (
   exit /b 1
 )
 
+REM ---------------------------------------------------------------------------
+REM  Clear a control panel left over from last time.
+REM
+REM  Closing the console window does not reliably deliver SIGINT on Windows, so
+REM  an earlier panel can still be holding 8790. Two ways that bites: the new
+REM  panel cannot bind and dies instantly, or - worse - your browser reconnects
+REM  to the OLD one, which is still running the code from before you edited it.
+REM  Then you read a source file, see the fix, and watch it not happen.
+REM ---------------------------------------------------------------------------
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr /R /C:":8790 .*LISTENING" 2^>nul') do (
+  taskkill /PID %%p /T /F >nul 2>&1
+)
+
 echo   Your browser will open in a moment.
 echo   Keep this window open - closing it stops everything.
 echo.

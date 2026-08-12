@@ -1,0 +1,43 @@
+WITNESS MODEL CHECK  2026-08-12T15:25:03.632Z
+
+  endpoint : https://generativelanguage.googleapis.com/v1beta/openai
+  provider : openai shape
+  text     : gemini-2.5-flash
+  vision   : gemini-2.5-flash
+
+  [..]  configured model rejected — asking the endpoint what it offers
+
+  Models this key can use:
+      gemini-2.5-flash
+      gemini-2.5-pro
+      gemini-2.5-flash-preview-tts
+      gemini-2.5-pro-preview-tts
+      gemini-flash-latest
+      gemini-flash-lite-latest
+      gemini-pro-latest
+      gemini-2.5-flash-lite
+      gemini-2.5-flash-image
+      gemini-3-flash-preview
+      gemini-3.1-pro-preview
+      gemini-3.1-pro-preview-customtools
+      gemini-3.1-flash-lite-preview
+      gemini-3.1-flash-lite
+      … and 22 more
+
+  Retrying with gemini-3.6-flash
+
+  [ok]   Model reachable                      1391ms  replied "READY"
+  [ok]   Structured extraction                4835ms  both rows, PENDING preserved
+  [ok]   Vision path (nameplate)             48451ms  accepted an image
+  [ok]   Verdict phrasing                     2148ms  "Wrong parts installed"
+
+  YOUR .env IS OUT OF DATE. It names "gemini-2.5-flash", which this key cannot use.
+  Everything above ran against "gemini-3.6-flash" instead. Set both lines in app/.env:
+
+      EXPO_PUBLIC_LLM_MODEL=gemini-3.6-flash
+      EXPO_PUBLIC_VLM_MODEL=gemini-3.6-flash
+
+  (or paste it into the control panel Model field and press Save settings)
+
+  All model paths are live. Ingestion will read documents with the model,
+  reading each one twice and holding any row the reads disagree on.
