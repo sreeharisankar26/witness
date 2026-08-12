@@ -54,7 +54,6 @@ quick start, and links to everything else.
 
 ```
 README.md         landing page
-MANUAL.md         full user manual — every screen, every verdict
 SETUP.md          installing and running
 BUILD_APK.md      building the phone app
 docs/

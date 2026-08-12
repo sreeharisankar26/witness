@@ -784,7 +784,6 @@ const SERVE = {
   apk: join(ROOT, 'witness.apk'),
   setup: join(ROOT, 'SETUP.md'),
   publishing: join(ROOT, 'PUBLISHING.md'),
-  manual: join(ROOT, 'MANUAL.md'),
   buildguide: join(ROOT, 'BUILD_APK.md'),
 };
 
