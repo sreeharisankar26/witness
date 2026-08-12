@@ -1620,12 +1620,12 @@
     }
   ],
   "_ingest": {
-    "at": "2026-08-12T17:22:08.297Z",
+    "at": "2026-08-12T23:13:29.450Z",
     "documents": [
       {
         "file": "L-895_Appendix_A_Rev_0.pdf",
         "textVia": "built-in reader (no dependencies)",
-        "reader": "pattern extractor (model failed)",
+        "reader": "pattern extractor",
         "rows": 0,
         "notes": 0,
         "agreement": null
@@ -1633,21 +1633,15 @@
       {
         "file": "submittal-register-A.pdf",
         "textVia": "built-in reader (no dependencies)",
-        "reader": "1x model (gemini-3.6-flash)",
+        "reader": "pattern extractor",
         "rows": 8,
         "notes": 1,
-        "agreement": {
-          "reads": 1,
-          "rows": 8,
-          "disputedRows": 0,
-          "missedRows": 0,
-          "note": "single read — no cross-check possible"
-        }
+        "agreement": null
       },
       {
         "file": "submittal-register-B.pdf",
         "textVia": "built-in reader (no dependencies)",
-        "reader": "pattern extractor (model failed)",
+        "reader": "pattern extractor",
         "rows": 5,
         "notes": 0,
         "agreement": null
@@ -1655,7 +1649,7 @@
       {
         "file": "submittal-register-C-hanford-format.pdf",
         "textVia": "built-in reader (no dependencies)",
-        "reader": "pattern extractor (model failed)",
+        "reader": "pattern extractor",
         "rows": 6,
         "notes": 1,
         "agreement": null
@@ -1709,7 +1703,7 @@
         "sku": "GT-12",
         "reason": {
           "code": "SUPERSEDED",
-          "detail": "superseded by SUB-0001 — \"SUB-0013 (GT-12 Rev B, Zone A) is SUPERSEDED BY SUB-0001 Rev C dated 31-Jul-2026.\""
+          "detail": "superseded by SUB-0001 — \"SUB-0013 (GT-12 Rev B, Zone A) is SUPERSEDED BY SUB-0001\""
         }
       },
       {

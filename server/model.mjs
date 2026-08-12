@@ -130,7 +130,7 @@ export async function ask({
     ? { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' }
     : { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` };
 
-  let lastError = '';
+  let lastError = '', lastStatus = 0, lastQuota = null;
   for (let attempt = 0; attempt <= retries; attempt++) {
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), timeoutMs);
@@ -139,31 +139,37 @@ export async function ask({
         method: 'POST', headers, body: JSON.stringify(body), signal: ctl.signal,
       });
       if (!res.ok) {
-        const detail = (await res.text().catch(() => '')).slice(0, 300);
+        const detail = (await res.text().catch(() => '')).slice(0, 600);
+        lastStatus = res.status;
         lastError = `HTTP ${res.status}${detail ? ` — ${detail}` : ''}`;
         // 401/403 is the key. No amount of retrying fixes it.
         if (res.status === 401 || res.status === 403) break;
 
         /**
-         * 429 is the free tier, and it needs WAITING, not retrying.
+         * 429 is the free tier, and there are two completely different kinds.
          *
-         * Free tiers are rated per minute. Ingesting four documents at two
-         * reads each fires eight calls in a couple of seconds, so the later
-         * ones get refused — and because every model path here degrades
-         * silently by design, the run "succeeds" having used a model for one
-         * document and patterns for the rest. The ensemble then has a single
-         * read, nothing to compare, and reports no agreement at all. That is
-         * exactly the number the demo is built on, missing, for a reason
-         * nothing on screen explains.
+         * PER MINUTE is a pacing problem and waiting fixes it. Ingesting four
+         * documents at two reads each fires eight calls in a couple of seconds,
+         * so the later ones get refused — and because every model path here
+         * degrades silently by design, the run "succeeds" having used a model
+         * for one document and patterns for the rest. The ensemble then has a
+         * single read, nothing to compare, and reports no agreement at all.
          *
-         * Honour Retry-After when the server sends one; otherwise back off.
+         * PER DAY is not a pacing problem. The quota is gone until it resets,
+         * and every second spent backing off is wasted. Worse, the two produce
+         * the same status code and nearly the same message, so a tool that
+         * treats them alike sits there sleeping through a wall it cannot get
+         * past. Tell them apart, and stop immediately on the second.
          */
+        lastQuota = quotaScopeOf(detail);
+        if (res.status === 429 && lastQuota === 'daily') break;
+
         if (res.status === 429 && attempt < retries) {
           const after = Number(res.headers.get('retry-after'));
           const waitMs = Number.isFinite(after) && after > 0
             ? Math.min(after * 1000, 65000)
             : 6000 * (attempt + 1);
-          onRetry?.({ status: 429, waitMs });
+          onRetry?.({ status: 429, waitMs, quota: lastQuota });
           await new Promise(r => setTimeout(r, waitMs));
         }
         continue;
@@ -179,7 +185,49 @@ export async function ask({
       clearTimeout(timer);
     }
   }
-  return { ok: false, error: lastError, ms: Date.now() - started, model, provider };
+  return {
+    ok: false, error: lastError, status: lastStatus, quota: lastQuota,
+    ms: Date.now() - started, model, provider,
+  };
+}
+
+/**
+ * Which kind of 429 is this?
+ *
+ * Providers do not give you a machine-readable answer, so this reads the prose.
+ * Google says "GenerateRequestsPerDayPerProjectPerModel" in the quota metric and
+ * "per day" in the message; OpenAI says "requests per day (RPD)". Anything that
+ * mentions a minute is pacing. Returns 'daily', 'minute' or 'unknown', and
+ * 'unknown' is treated as pacing because backing off is the safe guess.
+ */
+export function quotaScopeOf(detail = '') {
+  const s = String(detail);
+  if (/per[\s_-]*day|perday|\bRPD\b|daily\s+(quota|limit)/i.test(s)) return 'daily';
+  if (/per[\s_-]*minute|perminute|\bRPM\b/i.test(s)) return 'minute';
+  return 'unknown';
+}
+
+/**
+ * One short, true sentence about a failed model call, for a CLI to print.
+ *
+ * The raw body is 600 characters of nested JSON with a documentation URL in the
+ * middle of it. Printed as-is it pushes everything useful off the screen and
+ * tells the reader nothing they can act on.
+ */
+export function explainModelError({ error = '', status = 0, quota = null, model = '' } = {}) {
+  if (status === 401 || status === 403) {
+    return 'the API key was rejected (401/403) — check it for a stray space';
+  }
+  if (status === 429 && quota === 'daily') {
+    return `the free-tier daily quota for ${model || 'this model'} is used up. `
+         + 'It resets at midnight Pacific (12:30 PM IST). Quota is counted per '
+         + 'project and per model, so a new key in the same project will not help '
+         + '— but a different model usually has its own allowance';
+  }
+  if (status === 429) return 'rate limited (429) — too many requests too quickly';
+  if (status === 404) return `the model name "${model}" was refused (404) — it may be retired`;
+  if (/timed out/i.test(error)) return error;
+  return error.replace(/\s+/g, ' ').slice(0, 160);
 }
 
 /**
@@ -230,10 +278,8 @@ const NOT_CHAT = /embedding|embed|aqa|imagen|image-gen|veo|tts|audio|whisper|mod
  * and Flash is the one with headroom. Newest version first, and previews only
  * if nothing stable is available.
  */
-export function pickModel(models = []) {
+export function rankModels(models = []) {
   const usable = models.filter(m => !NOT_CHAT.test(m));
-  if (!usable.length) return null;
-
   const version = m => {
     const v = /(\d+(?:\.\d+)?)/.exec(m);
     return v ? Number(v[1]) : 0;
@@ -242,8 +288,11 @@ export function pickModel(models = []) {
                    + (/lite/i.test(m) ? -20 : 0)
                    + (/preview|exp|beta/i.test(m) ? -40 : 0)
                    + version(m);
+  return [...usable].sort((a, b) => score(b) - score(a) || a.length - b.length);
+}
 
-  return [...usable].sort((a, b) => score(b) - score(a) || a.length - b.length)[0];
+export function pickModel(models = []) {
+  return rankModels(models)[0] ?? null;
 }
 
 /**
@@ -262,32 +311,71 @@ export function pickModel(models = []) {
 export async function resolveModel({ url, key, model }) {
   if (!url || !key) return { ok: false, model, error: 'no model configured' };
 
+  const probeOne = m => ask({
+    url, key, model: m, maxTokens: 8, retries: 0, timeoutMs: 20000,
+    prompt: 'Reply with the single word: OK',
+  });
+
+  /** Every model that was tried and why it did not work, for the caller to print. */
+  const tried = [];
+  let first = null;
+
   if (model) {
-    const probe = await ask({
-      url, key, model, maxTokens: 8, retries: 0, timeoutMs: 20000,
-      prompt: 'Reply with the single word: OK',
-    });
+    const probe = await probeOne(model);
     if (probe.ok) return { ok: true, model, swapped: null };
+    first = probe;
     // 401/403 is the key, not the model — no point listing anything.
-    if (/40[13]/.test(probe.error || '')) return { ok: false, model, error: probe.error };
-    if (!/40[04]/.test(probe.error || '')) return { ok: false, model, error: probe.error };
+    if (probe.status === 401 || probe.status === 403) {
+      return { ok: false, model, error: probe.error, status: probe.status };
+    }
+    tried.push({ model, error: probe.error, status: probe.status, quota: probe.quota });
+
+    /**
+     * Only a refused MODEL is worth shopping around for. A 404 means the name
+     * is retired; a per-day 429 means this model's own allowance is gone, and
+     * on Google that allowance is counted per model, so a sibling usually still
+     * has one. Anything else — a timeout, a 500, no network — is a property of
+     * the endpoint and trying six more names just wastes six more calls.
+     */
+    const worthShopping = probe.status === 404 || probe.status === 400
+                       || (probe.status === 429 && probe.quota === 'daily');
+    if (!worthShopping) {
+      return { ok: false, model, error: probe.error, status: probe.status, quota: probe.quota, tried };
+    }
   }
 
   const list = await listModels({ url, key });
   if (!list.ok || !list.models.length) {
-    return { ok: false, model, error: `model "${model}" was refused and the model list is unavailable (${list.error || 'empty'})` };
+    return {
+      ok: false, model, tried,
+      status: first?.status, quota: first?.quota,
+      error: first?.error
+        ?? `model "${model}" was refused and the model list is unavailable (${list.error || 'empty'})`,
+    };
   }
-  const better = pickModel(list.models);
-  if (!better) {
-    return { ok: false, model, available: list.models, error: 'no chat-capable model available to this key' };
+
+  // Best first, and never re-probe the one that already failed.
+  const candidates = rankModels(list.models).filter(m => m !== model).slice(0, 4);
+  for (const candidate of candidates) {
+    const r = await probeOne(candidate);
+    if (r.ok) {
+      return {
+        ok: true, model: candidate, swapped: candidate, previous: model,
+        available: list.models, tried,
+      };
+    }
+    tried.push({ model: candidate, error: r.error, status: r.status, quota: r.quota });
+    // A key-level refusal will not change on the next name either.
+    if (r.status === 401 || r.status === 403) break;
   }
-  const retry = await ask({
-    url, key, model: better, maxTokens: 8, retries: 0, timeoutMs: 20000,
-    prompt: 'Reply with the single word: OK',
-  });
-  return retry.ok
-    ? { ok: true, model: better, swapped: better, previous: model, available: list.models }
-    : { ok: false, model: better, available: list.models, error: retry.error };
+
+  const last = tried[tried.length - 1] ?? {};
+  return {
+    ok: false, model, available: list.models, tried,
+    status: first?.status ?? last.status,
+    quota: first?.quota ?? last.quota,
+    error: first?.error ?? last.error ?? 'no chat-capable model available to this key',
+  };
 }
 
 /** Ask for JSON and get it back parsed, or a reason why not. */

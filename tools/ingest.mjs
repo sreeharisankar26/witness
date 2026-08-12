@@ -29,7 +29,7 @@ import { pdfToText } from '../server/pdftext.mjs';
 import { extractCandidates, validateSubmittals, toSubmittals } from '../server/ingest.mjs';
 import { reconcile } from '../server/ensemble.mjs';
 import { draftAll } from '../server/rfi.mjs';
-import { askJson, providerOf, resolveModel } from '../server/model.mjs';
+import { askJson, providerOf, resolveModel, explainModelError } from '../server/model.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(here, '..');
@@ -163,19 +163,28 @@ const PACE_MS = Number(process.env.WITNESS_PACE_MS || 4500);
  * document to the pattern extractor — so the run "worked" and used no model at
  * all, which is the exact failure this project exists to make visible.
  */
-let modelNote = '';
+let modelNote = '', modelHint = '';
 if (useModel) {
   const r = await resolveModel({ url: cfg.url, key: cfg.key, model: cfg.model });
   if (r.ok) {
     cfg.model = r.model;
     if (r.swapped) {
-      modelNote = `"${r.previous}" is retired — using "${r.swapped}" instead. `
-                + `Update EXPO_PUBLIC_LLM_MODEL and EXPO_PUBLIC_VLM_MODEL in app/.env.`;
+      modelNote = `"${r.previous}" was refused — using "${r.swapped}" instead. `
+                + `Set EXPO_PUBLIC_LLM_MODEL and EXPO_PUBLIC_VLM_MODEL in app/.env.`;
     }
   } else {
     useModel = false;
-    modelNote = `model unavailable (${r.error}) — reading with patterns instead. `
-              + `Run: node tools/modeltest.mjs`;
+    modelNote = `${explainModelError({ ...r, model: cfg.model })} — reading with patterns instead.`;
+    /**
+     * When resolveModel went shopping, say what it tried. Otherwise "no model
+     * available" looks like the tool gave up after one attempt, and the obvious
+     * next move — "try a different model" — is one somebody would waste time
+     * doing by hand having already had it done for them.
+     */
+    if (r.tried?.length > 1) {
+      modelHint = `tried ${r.tried.map(t => t.model).join(', ')} — `
+                + `all refused (${r.tried.filter(t => t.quota === 'daily').length} out of daily quota)`;
+    }
   }
 }
 
@@ -189,6 +198,7 @@ console.log(`  reader    : ${useModel
     : 'pattern extractor — no model key configured'}`);
 console.log(`  gate      : server/ingest.mjs (deterministic, 61 tests)`);
 if (modelNote) console.log(`  note      : ${modelNote}`);
+if (modelHint) console.log(`              ${modelHint}`);
 console.log('');
 
 const rows = [], notes = [], provenance = [];

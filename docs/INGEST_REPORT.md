@@ -1,6 +1,6 @@
 # Ingestion report
 
-Generated 2026-08-12T17:22:08.303Z by `tools/ingest.mjs`.
+Generated 2026-08-12T23:13:29.455Z by `tools/ingest.mjs`.
 
 A model reads the documents. `server/ingest.mjs` decides what is allowed to
 become an approved revision. Every row is accounted for — nothing is silently
@@ -18,10 +18,10 @@ dropped, and nothing ambiguous is silently accepted.
 
 | File | Text extracted via | Read by | Rows | Notes | Reads agreed |
 |---|---|---|---|---|---|
-| L-895_Appendix_A_Rev_0.pdf | built-in reader (no dependencies) | pattern extractor (model failed) | 0 | 0 | — |
-| submittal-register-A.pdf | built-in reader (no dependencies) | 1x model (gemini-3.6-flash) | 8 | 1 | — |
-| submittal-register-B.pdf | built-in reader (no dependencies) | pattern extractor (model failed) | 5 | 0 | — |
-| submittal-register-C-hanford-format.pdf | built-in reader (no dependencies) | pattern extractor (model failed) | 6 | 1 | — |
+| L-895_Appendix_A_Rev_0.pdf | built-in reader (no dependencies) | pattern extractor | 0 | 0 | — |
+| submittal-register-A.pdf | built-in reader (no dependencies) | pattern extractor | 8 | 1 | — |
+| submittal-register-B.pdf | built-in reader (no dependencies) | pattern extractor | 5 | 0 | — |
+| submittal-register-C-hanford-format.pdf | built-in reader (no dependencies) | pattern extractor | 6 | 1 | — |
 
 ## Refused — never enters the approved record
 
@@ -29,7 +29,7 @@ dropped, and nothing ambiguous is silently accepted.
 |---|---|---|---|---|
 | 354825-001-SUB-004 | AHU-04 | ZONE-C | B | review action "C" means revise and resubmit — this was never approved for installation |
 | SUB-0005 | PNL-08 | ZONE-C | B | review action "PENDING" means pending — this was never approved for installation |
-| SUB-0013 | GT-12 | ZONE-A | B | superseded by SUB-0001 — "SUB-0013 (GT-12 Rev B, Zone A) is SUPERSEDED BY SUB-0001 Rev C dated 31-Jul-2026." |
+| SUB-0013 | GT-12 | ZONE-A | B | superseded by SUB-0001 — "SUB-0013 (GT-12 Rev B, Zone A) is SUPERSEDED BY SUB-0001" |
 | SUB-0015 | DMP-15 | ZONE-C | B | review action "REJECTED" means rejected — this was never approved for installation |
 
 ## Held — readable, not verifiable, sent to a human
@@ -66,7 +66,7 @@ Full drafts in [RFI_DRAFTS.md](RFI_DRAFTS.md). None have been sent.
 
 ## Notes found in prose
 
-- **SUB-0013 superseded by SUB-0001** — "SUB-0013 (GT-12 Rev B, Zone A) is SUPERSEDED BY SUB-0001 Rev C dated 31-Jul-2026."
+- **SUB-0013 superseded by SUB-0001** — "SUB-0013 (GT-12 Rev B, Zone A) is SUPERSEDED BY SUB-0001"
 - **354825-001-SUB-004 superseded by 354825-001-SUB-011** — "354825-001-SUB-004 (AHU-04 Rev B, Zone C) is SUPERSEDED BY 354825-001-SUB-011"
 
 ---
