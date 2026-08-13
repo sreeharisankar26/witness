@@ -33,6 +33,12 @@ witness.apk
 # instead. Delete this line if you would rather ship it.
 witness_qr_tags.pdf
 
+# Rendered video slides. The generators in slides/*.py ARE the source and
+# reproduce these exactly, so committing 12 MB of JPEG would only create a
+# second copy that can drift from the script that made it. Same reasoning as
+# the tag sheet above. Delete this line if you would rather ship them.
+slides/*.jpg
+
 
 # ────────────────────────────────────────────────────────────── TOOLING
 node_modules/
