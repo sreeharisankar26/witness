@@ -1,6 +1,6 @@
 # Ingestion report
 
-Generated 2026-08-12T23:49:18.145Z by `tools/ingest.mjs`.
+Generated 2026-08-12T23:55:57.515Z by `tools/ingest.mjs`.
 
 A model reads the documents. `server/ingest.mjs` decides what is allowed to
 become an approved revision. Every row is accounted for — nothing is silently
@@ -8,20 +8,20 @@ dropped, and nothing ambiguous is silently accepted.
 
 | | |
 |---|---|
-| Rows read | **19** |
+| Rows read | **24** |
 | Accepted into the record | **13** |
 | Held for a human | **2** |
-| Refused | **4** |
-| Supersession notes found in prose | **2** |
+| Refused | **9** |
+| Supersession notes found in prose | **3** |
 
 ## Documents
 
 | File | Text extracted via | Read by | Rows | Notes | Reads agreed |
 |---|---|---|---|---|---|
-| L-895_Appendix_A_Rev_0.pdf | built-in reader (no dependencies) | pattern extractor | 0 | 0 | — |
-| submittal-register-A.pdf | built-in reader (no dependencies) | pattern extractor | 8 | 1 | — |
-| submittal-register-B.pdf | built-in reader (no dependencies) | pattern extractor | 5 | 0 | — |
-| submittal-register-C-hanford-format.pdf | built-in reader (no dependencies) | pattern extractor | 6 | 1 | — |
+| L-895_Appendix_A_Rev_0.pdf | built-in reader (no dependencies) | 2x model (gemini-3.5-flash) | 5 | 0 | 100% |
+| submittal-register-A.pdf | built-in reader (no dependencies) | 2x model (gemini-3.5-flash) | 8 | 1 | 100% |
+| submittal-register-B.pdf | built-in reader (no dependencies) | 2x model (gemini-3.5-flash) | 5 | 1 | 100% |
+| submittal-register-C-hanford-format.pdf | built-in reader (no dependencies) | 2x model (gemini-3.5-flash) | 6 | 1 | 100% |
 
 ## Refused — never enters the approved record
 
@@ -29,8 +29,13 @@ dropped, and nothing ambiguous is silently accepted.
 |---|---|---|---|---|
 | 354825-001-SUB-004 | AHU-04 | ZONE-C | B | review action "C" means revise and resubmit — this was never approved for installation |
 | SUB-0005 | PNL-08 | ZONE-C | B | review action "PENDING" means pending — this was never approved for installation |
-| SUB-0013 | GT-12 | ZONE-A | B | superseded by SUB-0001 — "SUB-0013 (GT-12 Rev B, Zone A) is SUPERSEDED BY SUB-0001" |
+| SUB-0013 | GT-12 | ZONE-A | B | superseded by SUB-0001 — "SUB-0013 (GT-12 Rev B, Zone A) is SUPERSEDED BY SUB-0001 Rev C dated 31-Jul-2026." |
 | SUB-0015 | DMP-15 | ZONE-C | B | review action "REJECTED" means rejected — this was never approved for installation |
+| XXXXXX-XXX-SUB-001 |  | — | — | no reference or no part number could be read |
+| XXXXXX-XXX-SUB-002 |  | — | — | no reference or no part number could be read |
+| XXXXXX-XXX-SUB-003 |  | — | — | no reference or no part number could be read |
+| XXXXXX-XXX-SUB-004 |  | — | — | no reference or no part number could be read |
+| XXXXXX-XXX-SUB-005 |  | — | — | no reference or no part number could be read |
 
 ## Held — readable, not verifiable, sent to a human
 
@@ -66,8 +71,9 @@ Full drafts in [RFI_DRAFTS.md](RFI_DRAFTS.md). None have been sent.
 
 ## Notes found in prose
 
-- **SUB-0013 superseded by SUB-0001** — "SUB-0013 (GT-12 Rev B, Zone A) is SUPERSEDED BY SUB-0001"
-- **354825-001-SUB-004 superseded by 354825-001-SUB-011** — "354825-001-SUB-004 (AHU-04 Rev B, Zone C) is SUPERSEDED BY 354825-001-SUB-011"
+- **SUB-0013 superseded by SUB-0001** — "SUB-0013 (GT-12 Rev B, Zone A) is SUPERSEDED BY SUB-0001 Rev C dated 31-Jul-2026."
+- **AHU-04 Rev C superseded by AHU-04 Rev D** — "AHU-04 Rev D supersedes Rev C across all zones."
+- **354825-001-SUB-004 superseded by 354825-001-SUB-011** — "354825-001-SUB-004 (AHU-04 Rev B, Zone C) is SUPERSEDED BY 354825-001-SUB-011 Rev C."
 
 ---
 

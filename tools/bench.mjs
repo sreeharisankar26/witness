@@ -20,16 +20,26 @@
  */
 import { writeFileSync } from 'node:fs';
 import { dirname, join, resolve as resolvePath } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolvePath(here, '..');
 
-const { resolve, memoryFor, supersededChain, buildIndex } = await import(
-  join(ROOT, 'app', 'src', 'engine', 'resolve.ts')
-);
-const { forecast } = await import(join(ROOT, 'server', 'forecast.mjs'));
-const { deriveReturnBatches, deriveReorder } = await import(join(ROOT, 'server', 'reorder.mjs'));
+/**
+ * A dynamic import takes a URL, not a path.
+ *
+ * On Linux and macOS an absolute path happens to work, because it starts with a
+ * slash and the loader reads it as a relative URL. On Windows it starts with
+ * "C:" and the loader reads that as a URL scheme it has never heard of, so this
+ * file failed on Windows and nowhere else — with an error that names ESM
+ * loaders and says nothing about paths.
+ */
+const load = p => import(pathToFileURL(p).href);
+
+const { resolve, memoryFor, supersededChain, buildIndex } =
+  await load(join(ROOT, 'app', 'src', 'engine', 'resolve.ts'));
+const { forecast } = await load(join(ROOT, 'server', 'forecast.mjs'));
+const { deriveReturnBatches, deriveReorder } = await load(join(ROOT, 'server', 'reorder.mjs'));
 
 const out = [];
 const p = s => { out.push(String(s)); console.log(String(s)); };

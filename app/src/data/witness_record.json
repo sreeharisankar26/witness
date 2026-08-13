@@ -1620,47 +1620,71 @@
     }
   ],
   "_ingest": {
-    "at": "2026-08-12T23:49:18.139Z",
+    "at": "2026-08-12T23:55:57.513Z",
     "documents": [
       {
         "file": "L-895_Appendix_A_Rev_0.pdf",
         "textVia": "built-in reader (no dependencies)",
-        "reader": "pattern extractor",
-        "rows": 0,
+        "reader": "2x model (gemini-3.5-flash)",
+        "rows": 5,
         "notes": 0,
-        "agreement": null
+        "agreement": {
+          "reads": 2,
+          "rows": 5,
+          "disputedRows": 0,
+          "missedRows": 0,
+          "rate": 100
+        }
       },
       {
         "file": "submittal-register-A.pdf",
         "textVia": "built-in reader (no dependencies)",
-        "reader": "pattern extractor",
+        "reader": "2x model (gemini-3.5-flash)",
         "rows": 8,
         "notes": 1,
-        "agreement": null
+        "agreement": {
+          "reads": 2,
+          "rows": 8,
+          "disputedRows": 0,
+          "missedRows": 0,
+          "rate": 100
+        }
       },
       {
         "file": "submittal-register-B.pdf",
         "textVia": "built-in reader (no dependencies)",
-        "reader": "pattern extractor",
+        "reader": "2x model (gemini-3.5-flash)",
         "rows": 5,
-        "notes": 0,
-        "agreement": null
+        "notes": 1,
+        "agreement": {
+          "reads": 2,
+          "rows": 5,
+          "disputedRows": 0,
+          "missedRows": 0,
+          "rate": 100
+        }
       },
       {
         "file": "submittal-register-C-hanford-format.pdf",
         "textVia": "built-in reader (no dependencies)",
-        "reader": "pattern extractor",
+        "reader": "2x model (gemini-3.5-flash)",
         "rows": 6,
         "notes": 1,
-        "agreement": null
+        "agreement": {
+          "reads": 2,
+          "rows": 6,
+          "disputedRows": 0,
+          "missedRows": 0,
+          "rate": 100
+        }
       }
     ],
     "stats": {
-      "read": 19,
+      "read": 24,
       "accepted": 13,
       "held": 2,
-      "rejected": 4,
-      "notesFound": 2
+      "rejected": 9,
+      "notesFound": 3
     },
     "heldForReview": [
       {
@@ -1703,7 +1727,7 @@
         "sku": "GT-12",
         "reason": {
           "code": "SUPERSEDED",
-          "detail": "superseded by SUB-0001 — \"SUB-0013 (GT-12 Rev B, Zone A) is SUPERSEDED BY SUB-0001\""
+          "detail": "superseded by SUB-0001 — \"SUB-0013 (GT-12 Rev B, Zone A) is SUPERSEDED BY SUB-0001 Rev C dated 31-Jul-2026.\""
         }
       },
       {
@@ -1712,6 +1736,46 @@
         "reason": {
           "code": "NOT_APPROVED",
           "detail": "review action \"REJECTED\" means rejected — this was never approved for installation"
+        }
+      },
+      {
+        "id": "XXXXXX-XXX-SUB-001",
+        "sku": null,
+        "reason": {
+          "code": "UNREADABLE",
+          "detail": "no reference or no part number could be read"
+        }
+      },
+      {
+        "id": "XXXXXX-XXX-SUB-002",
+        "sku": null,
+        "reason": {
+          "code": "UNREADABLE",
+          "detail": "no reference or no part number could be read"
+        }
+      },
+      {
+        "id": "XXXXXX-XXX-SUB-003",
+        "sku": null,
+        "reason": {
+          "code": "UNREADABLE",
+          "detail": "no reference or no part number could be read"
+        }
+      },
+      {
+        "id": "XXXXXX-XXX-SUB-004",
+        "sku": null,
+        "reason": {
+          "code": "UNREADABLE",
+          "detail": "no reference or no part number could be read"
+        }
+      },
+      {
+        "id": "XXXXXX-XXX-SUB-005",
+        "sku": null,
+        "reason": {
+          "code": "UNREADABLE",
+          "detail": "no reference or no part number could be read"
         }
       }
     ]

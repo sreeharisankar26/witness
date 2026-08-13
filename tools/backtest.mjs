@@ -28,11 +28,15 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve as resolvePath } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolvePath(here, '..');
-const { resolve, severityOf } = await import(join(ROOT, 'app', 'src', 'engine', 'resolve.ts'));
+// A dynamic import takes a URL, not a path. An absolute Windows path begins
+// "C:", which the ESM loader reads as an unknown URL scheme — so this line
+// worked everywhere except the machine the demo is recorded on.
+const { resolve, severityOf } =
+  await import(pathToFileURL(join(ROOT, 'app', 'src', 'engine', 'resolve.ts')).href);
 
 const out = [];
 const p = s => { out.push(String(s)); console.log(String(s)); };
